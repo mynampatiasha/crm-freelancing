@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FreelanceCRM — Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-name">Freelance<span>CRM</span></div>
+      <div class="brand-sub">Your agency, fully in control</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-label">Main</div>
+      <a href="dashboard.html" class="nav-item active" data-page="dashboard.html">
+        <span class="nav-icon">⬛</span> Dashboard
+      </a>
+      <a href="clients.html" class="nav-item" data-page="clients.html">
+        <span class="nav-icon">🏢</span> Clients
+      </a>
+      <a href="projects.html" class="nav-item" data-page="projects.html">
+        <span class="nav-icon">📁</span> Projects
+      </a>
+      <a href="payments.html" class="nav-item" data-page="payments.html">
+        <span class="nav-icon">💰</span> Payments
+      </a>
+      <div class="nav-label">Settings</div>
+      <a href="users.html" class="nav-item" data-page="users.html">
+        <span class="nav-icon">👥</span> Users
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar" id="sidebar-user-avatar">?</div>
+        <div>
+          <div class="user-name" id="sidebar-user-name">Loading...</div>
+          <div class="user-email" id="sidebar-user-email"></div>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="doLogout()">⬡ Sign out</button>
+    </div>
+  </aside>
+
+  <!-- TOPBAR (mobile) -->
+  <div class="topbar">
+    <div class="brand">Freelance<span>CRM</span></div>
+    <button class="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+  </div>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="page-header">
+      <h1>Dashboard</h1>
+      <p>Overview of your agency's activity</p>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-grid" id="stats-grid">
+      <div class="stat-card">
+        <div class="glow" style="background:var(--accent2)"></div>
+        <div class="stat-label">Total Clients</div>
+        <div class="stat-value c-accent" id="stat-clients">—</div>
+        <div class="stat-sub">All time</div>
+      </div>
+      <div class="stat-card">
+        <div class="glow" style="background:var(--amber)"></div>
+        <div class="stat-label">Ongoing Projects</div>
+        <div class="stat-value c-amber" id="stat-ongoing">—</div>
+        <div class="stat-sub">In progress</div>
+      </div>
+      <div class="stat-card">
+        <div class="glow" style="background:var(--green)"></div>
+        <div class="stat-label">Completed</div>
+        <div class="stat-value c-green" id="stat-completed">—</div>
+        <div class="stat-sub">Projects done</div>
+      </div>
+      <div class="stat-card">
+        <div class="glow" style="background:var(--pink)"></div>
+        <div class="stat-label">Total Collected</div>
+        <div class="stat-value c-pink" id="stat-collected">—</div>
+        <div class="stat-sub">Payments received</div>
+      </div>
+    </div>
+
+    <!-- RECENT CLIENTS -->
+    <div class="section">
+      <div class="section-head">
+        <h2>Recent Clients</h2>
+        <a href="clients.html" class="btn btn-ghost btn-sm">View all →</a>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Company</th>
+              <th>Type</th>
+              <th>Budget</th>
+              <th>Rating</th>
+              <th>Added</th>
+            </tr>
+          </thead>
+          <tbody id="recent-clients">
+            <tr><td colspan="5"><div class="empty"><div class="empty-icon">🏢</div><p>Loading...</p></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- RECENT PROJECTS -->
+    <div class="section">
+      <div class="section-head">
+        <h2>Recent Projects</h2>
+        <a href="projects.html" class="btn btn-ghost btn-sm">View all →</a>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Project</th>
+              <th>Client</th>
+              <th>Status</th>
+              <th>Progress</th>
+            </tr>
+          </thead>
+          <tbody id="recent-projects">
+            <tr><td colspan="4"><div class="empty"><div class="empty-icon">📁</div><p>Loading...</p></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- RECENT PAYMENTS -->
+    <div class="section">
+      <div class="section-head">
+        <h2>Recent Payments</h2>
+        <a href="payments.html" class="btn btn-ghost btn-sm">View all →</a>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Client</th>
+              <th>Amount</th>
+              <th>Note</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody id="recent-payments">
+            <tr><td colspan="4"><div class="empty"><div class="empty-icon">💰</div><p>Loading...</p></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<div id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase.js"></script>
+<script>
+(async () => {
+  await requireAuth();
+  await loadSidebarUser();
+  setActiveNav();
+  loadStats();
+  loadRecentClients();
+  loadRecentProjects();
+  loadRecentPayments();
+})();
+
+async function loadStats() {
+  const [
+    { count: totalClients },
+    { count: ongoing },
+    { count: completed },
+    { data: payments }
+  ] = await Promise.all([
+    sb.from('clients').select('*', { count: 'exact', head: true }),
+    sb.from('projects').select('*', { count: 'exact', head: true }).eq('status', 'ongoing'),
+    sb.from('projects').select('*', { count: 'exact', head: true }).eq('status', 'completed'),
+    sb.from('payments').select('amount')
+  ]);
+
+  document.getElementById('stat-clients').textContent   = totalClients ?? 0;
+  document.getElementById('stat-ongoing').textContent   = ongoing ?? 0;
+  document.getElementById('stat-completed').textContent = completed ?? 0;
+
+  const total = (payments || []).reduce((s, p) => s + (p.amount || 0), 0);
+  document.getElementById('stat-collected').textContent = '₹' + total.toLocaleString('en-IN');
+}
+
+async function loadRecentClients() {
+  const { data, error } = await sb.from('clients').select('*').order('created_at', { ascending: false }).limit(5);
+  const tbody = document.getElementById('recent-clients');
+  if (error || !data?.length) {
+    tbody.innerHTML = `<tr><td colspan="5"><div class="empty"><div class="empty-icon">🏢</div><p>No clients yet. <a href="clients.html" style="color:var(--accent2)">Add one →</a></p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = data.map(c => `
+    <tr>
+      <td><strong>${c.company_name}</strong></td>
+      <td><span class="chip">${c.business_type || '—'}</span></td>
+      <td>${c.budget ? '₹' + Number(c.budget).toLocaleString('en-IN') : '—'}</td>
+      <td><span class="stars">${'★'.repeat(c.rating || 0)}${'☆'.repeat(5 - (c.rating || 0))}</span></td>
+      <td style="color:var(--muted);font-size:12px">${new Date(c.created_at).toLocaleDateString('en-IN')}</td>
+    </tr>
+  `).join('');
+}
+
+async function loadRecentProjects() {
+  const { data, error } = await sb.from('projects').select('*, clients(company_name)').order('created_at', { ascending: false }).limit(5);
+  const tbody = document.getElementById('recent-projects');
+  if (error || !data?.length) {
+    tbody.innerHTML = `<tr><td colspan="4"><div class="empty"><div class="empty-icon">📁</div><p>No projects yet.</p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = data.map(p => {
+    const badgeClass = p.status === 'completed' ? 'badge-green' : p.status === 'ongoing' ? 'badge-amber' : 'badge-gray';
+    const pct = p.progress || 0;
+    const fillClass = pct === 100 ? 'green' : pct >= 50 ? 'amber' : '';
+    return `
+      <tr>
+        <td><strong>${p.title || '—'}</strong></td>
+        <td style="color:var(--muted)">${p.clients?.company_name || '—'}</td>
+        <td><span class="badge ${badgeClass}">${p.status}</span></td>
+        <td>
+          <div class="progress-wrap">
+            <div class="progress-bar"><div class="progress-fill ${fillClass}" style="width:${pct}%"></div></div>
+            <span class="progress-pct">${pct}%</span>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+async function loadRecentPayments() {
+  const { data, error } = await sb.from('payments').select('*, clients(company_name)').order('received_at', { ascending: false }).limit(5);
+  const tbody = document.getElementById('recent-payments');
+  if (error || !data?.length) {
+    tbody.innerHTML = `<tr><td colspan="4"><div class="empty"><div class="empty-icon">💰</div><p>No payments yet.</p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = data.map(p => `
+    <tr>
+      <td>${p.clients?.company_name || '—'}</td>
+      <td><strong style="color:var(--green)">₹${Number(p.amount).toLocaleString('en-IN')}</strong></td>
+      <td style="color:var(--muted)">${p.note || '—'}</td>
+      <td style="color:var(--muted);font-size:12px">${new Date(p.received_at).toLocaleDateString('en-IN')}</td>
+    </tr>
+  `).join('');
+}
+</script>
+</body>
+</html>
