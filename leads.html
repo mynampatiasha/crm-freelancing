@@ -173,6 +173,92 @@
     }
     .dropzone .dz-icon { font-size:36px;margin-bottom:10px; }
     .dropzone p { font-size:13px;color:var(--text-muted);margin:0; }
+
+    /* ── DATETIME POPUP ── */
+    .dt-popup {
+      position:fixed;
+      background:#fff;
+      border:1.5px solid var(--card-border,#E2E8F0);
+      border-radius:12px;
+      padding:16px 18px;
+      box-shadow:0 8px 32px rgba(13,27,62,0.18);
+      z-index:9000;
+      min-width:260px;
+      animation:popIn 0.18s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    @keyframes popIn {
+      from { opacity:0;transform:scale(0.92) translateY(-6px); }
+      to   { opacity:1;transform:scale(1) translateY(0); }
+    }
+    .dt-popup h4 {
+      font-size:13px;font-weight:700;color:#0D1B3E;
+      margin-bottom:10px;display:flex;align-items:center;gap:6px;
+    }
+    .dt-popup input[type="datetime-local"] {
+      width:100%;border:1.5px solid #E2E8F0;border-radius:8px;
+      padding:9px 11px;font-family:'Outfit',sans-serif;font-size:13px;
+      color:#1A2340;outline:none;
+      transition:border-color 0.2s;
+      margin-bottom:12px;
+    }
+    .dt-popup input[type="datetime-local"]:focus { border-color:#3D8EFF; }
+    .dt-popup-actions { display:flex;gap:8px;justify-content:flex-end; }
+    .dt-popup-actions button {
+      padding:6px 14px;border-radius:7px;font-family:'Outfit',sans-serif;
+      font-size:12.5px;font-weight:600;cursor:pointer;border:none;
+      transition:all 0.15s;
+    }
+    .dt-btn-cancel { background:#F1F5F9;color:#64748B; }
+    .dt-btn-cancel:hover { background:#E2E8F0; }
+    .dt-btn-confirm { background:linear-gradient(135deg,#0D1B3E,#2463AE);color:#fff; }
+    .dt-btn-confirm:hover { background:linear-gradient(135deg,#1A3A6B,#3D8EFF); }
+
+    /* ── STATUS TIMELINE ── */
+    .timeline { margin-top:4px; }
+    .timeline-item {
+      display:flex;gap:12px;align-items:flex-start;
+      padding:10px 0;
+      border-bottom:1px solid #F1F5F9;
+      position:relative;
+    }
+    .timeline-item:last-child { border-bottom:none; }
+    .timeline-dot {
+      width:32px;height:32px;border-radius:50%;
+      display:flex;align-items:center;justify-content:center;
+      font-size:14px;flex-shrink:0;margin-top:1px;
+    }
+    .timeline-content { flex:1; }
+    .timeline-main {
+      font-size:13px;font-weight:600;color:#1A2340;
+      display:flex;align-items:center;gap:6px;flex-wrap:wrap;
+    }
+    .timeline-arrow { color:#94A3B8;font-size:11px; }
+    .timeline-meta { font-size:11.5px;color:#94A3B8;margin-top:3px; }
+    .timeline-scheduled {
+      font-size:12px;font-weight:600;
+      background:#EDE9FE;color:#6D28D9;
+      border-radius:6px;padding:2px 8px;margin-top:4px;display:inline-block;
+    }
+    .timeline-followup {
+      font-size:12px;font-weight:600;
+      background:#FEF3C7;color:#B45309;
+      border-radius:6px;padding:2px 8px;margin-top:4px;display:inline-block;
+    }
+    .tl-section-title {
+      font-size:11px;font-weight:700;color:#94A3B8;
+      text-transform:uppercase;letter-spacing:0.08em;
+      margin:18px 0 8px;padding-bottom:6px;
+      border-bottom:2px solid #F1F5F9;
+    }
+
+    /* ── SCHEDULED FIELD IN MODAL ── */
+    .scheduled-field {
+      display:none;
+      grid-column:span 2;
+      animation:fadeIn 0.2s ease;
+    }
+    .scheduled-field.show { display:flex;flex-direction:column;gap:5px; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:translateY(0)} }
   </style>
 </head>
 <body>
@@ -224,8 +310,8 @@
         <p>Track every lead from first call to conversion</p>
       </div>
       <div class="page-topbar-right" style="display:flex;gap:8px;flex-wrap:wrap">
-<button class="btn btn-ghost" onclick="openImportModal()" style="background:rgba(255,255,255,0.15);color:#fff;border-color:rgba(255,255,255,0.4);">⬆ Import</button>
-<button class="btn btn-ghost" onclick="exportLeads()" style="background:rgba(255,255,255,0.15);color:#fff;border-color:rgba(255,255,255,0.4);">⬇ Export</button>
+        <button class="btn btn-ghost" onclick="openImportModal()" style="background:rgba(255,255,255,0.15);color:#fff;border-color:rgba(255,255,255,0.4);">⬆ Import</button>
+        <button class="btn btn-ghost" onclick="exportLeads()" style="background:rgba(255,255,255,0.15);color:#fff;border-color:rgba(255,255,255,0.4);">⬇ Export</button>
         <button class="btn btn-primary" onclick="openModal()">+ Add Lead</button>
       </div>
     </div>
@@ -233,9 +319,7 @@
     <div class="page-content">
 
       <!-- ── PIPELINE STATUS CARDS ── -->
-      <div class="pipeline-grid" id="pipeline-grid">
-        <!-- filled by JS -->
-      </div>
+      <div class="pipeline-grid" id="pipeline-grid"></div>
 
       <!-- ── FILTERS ── -->
       <div class="filter-row">
@@ -322,7 +406,7 @@
         </div>
         <div class="field">
           <label>Status</label>
-          <select id="lf-status">
+          <select id="lf-status" onchange="toggleScheduledField()">
             <option value="called">📞 Called</option>
             <option value="accepted">✅ Accepted</option>
             <option value="scheduled">📅 Scheduled</option>
@@ -342,6 +426,14 @@
             <input type="radio" name="lead-rating" id="ls1" value="1"><label for="ls1">★</label>
           </div>
         </div>
+
+        <!-- ── SCHEDULED / FOLLOWUP DATETIME FIELD ── -->
+        <div class="field scheduled-field" id="modal-scheduled-field">
+          <label id="modal-scheduled-label">📅 Scheduled Date & Time</label>
+          <input type="datetime-local" id="lf-scheduled-at" />
+          <div style="font-size:11px;color:var(--text-muted);margin-top:3px" id="modal-scheduled-hint">Set the exact date and time for this appointment.</div>
+        </div>
+
         <div class="field span2">
           <label>Created By</label>
           <input type="text" id="lf-created-by" placeholder="Auto-filled with your name" />
@@ -438,6 +530,9 @@ const STATUS_CONFIG = {
   dontwant:  { label:"Don't Want", icon:'🚫', cls:'status-dontwant',  color:'#475569', bar:'#94A3B8' },
 };
 
+// Statuses that need a datetime input
+const DATETIME_STATUSES = ['scheduled', 'followup'];
+
 // ════════════════════════════════════════════
 // SIDEBAR
 // ════════════════════════════════════════════
@@ -465,7 +560,6 @@ function closeSidebar() {
   await requireAuth();
   await loadSidebarUser();
   setActiveNav();
-  // grab logged-in user name for "created by" default
   currentUserName = document.getElementById('sidebar-user-name')?.textContent?.trim() || '';
   await loadLeads();
 })();
@@ -509,11 +603,7 @@ function renderPipeline() {
 
 function togglePipelineFilter(key) {
   activePipelineFilter = activePipelineFilter === key ? '' : key;
-  if (activePipelineFilter) {
-    document.getElementById('f-status').value = activePipelineFilter;
-  } else {
-    document.getElementById('f-status').value = '';
-  }
+  document.getElementById('f-status').value = activePipelineFilter;
   renderPipeline();
   applyFilters();
 }
@@ -535,7 +625,6 @@ function applyFilters() {
   const createdBy= document.getElementById('f-created-by').value;
   const status   = document.getElementById('f-status').value;
 
-  // keep pipeline card in sync
   activePipelineFilter = status;
   renderPipeline();
 
@@ -577,6 +666,15 @@ function renderTable(list) {
     const dt    = new Date(l.created_at);
     const dtStr = dt.toLocaleDateString('en-IN') + ' ' + dt.toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit'});
     const rowCls= l.status === 'converted' ? 'row-converted' : l.status === 'cancelled' ? 'row-cancelled' : l.status === 'dontwant' ? 'row-dontwant' : '';
+
+    // Show scheduled_at badge if set
+    let scheduledBadge = '';
+    if (l.scheduled_at && (l.status === 'scheduled' || l.status === 'followup')) {
+      const sd = new Date(l.scheduled_at);
+      const label = l.status === 'scheduled' ? '📅' : '🔄';
+      scheduledBadge = `<div style="font-size:11px;color:${l.status==='scheduled'?'#6D28D9':'#B45309'};margin-top:3px;font-weight:600">${label} ${sd.toLocaleDateString('en-IN')} ${sd.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}</div>`;
+    }
+
     return `<tr class="${rowCls}">
       <td><div class="td-lead"><div class="lead-avatar">${ini}</div><strong>${l.company_name}</strong></div></td>
       <td style="color:var(--text-muted)">${l.phone||'—'}</td>
@@ -588,6 +686,7 @@ function renderTable(list) {
             `<option value="${k}" ${l.status===k?'selected':''}>${c.icon} ${c.label}</option>`
           ).join('')}
         </select>
+        ${scheduledBadge}
       </td>
       <td style="color:var(--text-muted);font-size:13px">${l.created_by||'—'}</td>
       <td style="color:var(--text-muted);font-size:12px">${dtStr}</td>
@@ -603,27 +702,166 @@ function renderTable(list) {
 }
 
 // ════════════════════════════════════════════
+// DATETIME POPUP
+// ════════════════════════════════════════════
+let _dtPopupResolve = null;
+
+function showDatetimePopup(selectEl, status) {
+  return new Promise((resolve) => {
+    _dtPopupResolve = resolve;
+
+    // Remove any existing popup
+    const existing = document.getElementById('dt-popup');
+    if (existing) existing.remove();
+
+    const cfg = STATUS_CONFIG[status];
+    const isScheduled = status === 'scheduled';
+    const title = isScheduled ? '📅 Set Scheduled Date & Time' : '🔄 Set Follow Up Date & Time';
+    const hint  = isScheduled ? 'When is this meeting/appointment?' : 'When should you follow up?';
+
+    const popup = document.createElement('div');
+    popup.className = 'dt-popup';
+    popup.id = 'dt-popup';
+
+    // Default to tomorrow at 10am
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(10, 0, 0, 0);
+    const defaultVal = tomorrow.toISOString().slice(0, 16);
+
+    popup.innerHTML = `
+      <h4>${title}</h4>
+      <p style="font-size:12px;color:#64748B;margin-bottom:10px">${hint}</p>
+      <input type="datetime-local" id="dt-popup-input" value="${defaultVal}" />
+      <div class="dt-popup-actions">
+        <button class="dt-btn-cancel" onclick="cancelDatetimePopup()">Cancel</button>
+        <button class="dt-btn-confirm" onclick="confirmDatetimePopup()">Confirm</button>
+      </div>
+    `;
+
+    // Position near the select element
+    const rect = selectEl.getBoundingClientRect();
+    document.body.appendChild(popup);
+
+    const popupW = popup.offsetWidth || 260;
+    const popupH = popup.offsetHeight || 160;
+    let top  = rect.bottom + window.scrollY + 6;
+    let left = rect.left + window.scrollX;
+
+    // Keep within viewport
+    if (left + popupW > window.innerWidth - 12) left = window.innerWidth - popupW - 12;
+    if (top + popupH > window.innerHeight + window.scrollY - 12) top = rect.top + window.scrollY - popupH - 6;
+
+    popup.style.top  = top + 'px';
+    popup.style.left = left + 'px';
+
+    // Close on outside click
+    setTimeout(() => {
+      document.addEventListener('click', outsidePopupClick);
+    }, 100);
+  });
+}
+
+function outsidePopupClick(e) {
+  const popup = document.getElementById('dt-popup');
+  if (popup && !popup.contains(e.target)) {
+    cancelDatetimePopup();
+  }
+}
+
+function cancelDatetimePopup() {
+  document.removeEventListener('click', outsidePopupClick);
+  const popup = document.getElementById('dt-popup');
+  if (popup) popup.remove();
+  if (_dtPopupResolve) { _dtPopupResolve(null); _dtPopupResolve = null; }
+}
+
+function confirmDatetimePopup() {
+  document.removeEventListener('click', outsidePopupClick);
+  const val = document.getElementById('dt-popup-input')?.value;
+  const popup = document.getElementById('dt-popup');
+  if (popup) popup.remove();
+  if (_dtPopupResolve) {
+    _dtPopupResolve(val ? new Date(val).toISOString() : null);
+    _dtPopupResolve = null;
+  }
+}
+
+// ════════════════════════════════════════════
 // QUICK STATUS CHANGE
 // ════════════════════════════════════════════
 async function quickStatusChange(id, newStatus, selectEl) {
   const lead = allLeads.find(l => l.id === id);
   if (!lead) return;
   const oldStatus = lead.status;
+  if (oldStatus === newStatus) return;
 
-  const { error } = await sb.from('leads').update({ status: newStatus }).eq('id', id);
-  if (error) { showToast('Status update failed: ' + error.message, 'error'); selectEl.value = oldStatus; return; }
+  let scheduledAt = null;
 
+  // Show popup for scheduled / followup
+  if (DATETIME_STATUSES.includes(newStatus)) {
+    scheduledAt = await showDatetimePopup(selectEl, newStatus);
+    if (scheduledAt === null) {
+      // User cancelled — revert dropdown
+      selectEl.value = oldStatus;
+      return;
+    }
+  }
+
+  // Update lead in DB
+  const updatePayload = { status: newStatus };
+  if (scheduledAt) updatePayload.scheduled_at = scheduledAt;
+  // Clear scheduled_at if moving away from scheduled/followup
+  if (!DATETIME_STATUSES.includes(newStatus) && lead.scheduled_at) updatePayload.scheduled_at = null;
+
+  const { error } = await sb.from('leads').update(updatePayload).eq('id', id);
+  if (error) {
+    showToast('Status update failed: ' + error.message, 'error');
+    selectEl.value = oldStatus;
+    return;
+  }
+
+  // Log the status change
+  await logStatusChange(id, oldStatus, newStatus, scheduledAt);
+
+  // Update local state
   lead.status = newStatus;
+  if (scheduledAt) lead.scheduled_at = scheduledAt;
+  else if (!DATETIME_STATUSES.includes(newStatus)) lead.scheduled_at = null;
 
-  // ── AUTO CONVERT ──
+  // Auto convert
   if (newStatus === 'converted' && oldStatus !== 'converted') {
     await convertLeadToClient(lead);
   }
 
   renderPipeline();
   applyFilters();
+
+  if (scheduledAt) {
+    const d = new Date(scheduledAt);
+    const cfg = STATUS_CONFIG[newStatus];
+    showToast(`${cfg.icon} ${cfg.label} set for ${d.toLocaleDateString('en-IN')} at ${d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}`, 'success');
+  }
 }
 
+// ════════════════════════════════════════════
+// LOG STATUS CHANGE
+// ════════════════════════════════════════════
+async function logStatusChange(leadId, fromStatus, toStatus, scheduledAt = null) {
+  const payload = {
+    lead_id:      leadId,
+    from_status:  fromStatus,
+    to_status:    toStatus,
+    scheduled_at: scheduledAt || null,
+    changed_by:   currentUserName,
+  };
+  const { error } = await sb.from('lead_status_logs').insert([payload]);
+  if (error) console.warn('Status log insert failed:', error.message);
+}
+
+// ════════════════════════════════════════════
+// CONVERT LEAD TO CLIENT
+// ════════════════════════════════════════════
 async function convertLeadToClient(lead) {
   const payload = {
     company_name:  lead.company_name,
@@ -640,6 +878,29 @@ async function convertLeadToClient(lead) {
     showToast('Lead marked converted but client insert failed: ' + error.message, 'error');
   } else {
     showToast(`🎉 "${lead.company_name}" converted and added to Clients!`, 'success');
+  }
+}
+
+// ════════════════════════════════════════════
+// MODAL SCHEDULED FIELD TOGGLE
+// ════════════════════════════════════════════
+function toggleScheduledField() {
+  const status = document.getElementById('lf-status').value;
+  const field  = document.getElementById('modal-scheduled-field');
+  const label  = document.getElementById('modal-scheduled-label');
+  const hint   = document.getElementById('modal-scheduled-hint');
+
+  if (status === 'scheduled') {
+    field.classList.add('show');
+    label.textContent = '📅 Scheduled Date & Time';
+    hint.textContent  = 'Set the exact date and time for this appointment.';
+  } else if (status === 'followup') {
+    field.classList.add('show');
+    label.textContent = '🔄 Follow Up Date & Time';
+    hint.textContent  = 'Set when you want to follow up with this lead.';
+  } else {
+    field.classList.remove('show');
+    document.getElementById('lf-scheduled-at').value = '';
   }
 }
 
@@ -661,12 +922,17 @@ function openModal(id = null) {
     document.getElementById('lf-status').value      = 'called';
     document.getElementById('lf-notes').value       = '';
     document.getElementById('lf-created-by').value  = currentUserName;
+    document.getElementById('lf-scheduled-at').value= '';
     document.querySelectorAll('input[name="lead-rating"]').forEach(r => r.checked = false);
+    document.getElementById('modal-scheduled-field').classList.remove('show');
   }
   document.getElementById('modal-overlay').classList.add('open');
 }
 
-function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); editingId = null; }
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  editingId = null;
+}
 
 function editLead(id) {
   const l = allLeads.find(x => x.id === id);
@@ -681,7 +947,20 @@ function editLead(id) {
   document.getElementById('lf-status').value       = l.status || 'called';
   document.getElementById('lf-notes').value        = l.notes || '';
   document.getElementById('lf-created-by').value   = l.created_by || '';
+
+  // Set scheduled_at if present
+  if (l.scheduled_at) {
+    const local = new Date(l.scheduled_at);
+    // Convert to local datetime-local format
+    const offset = local.getTimezoneOffset() * 60000;
+    const localISO = new Date(local - offset).toISOString().slice(0, 16);
+    document.getElementById('lf-scheduled-at').value = localISO;
+  } else {
+    document.getElementById('lf-scheduled-at').value = '';
+  }
+
   if (l.rating) { const r = document.getElementById('ls'+l.rating); if(r) r.checked = true; }
+  toggleScheduledField();
 }
 
 // ════════════════════════════════════════════
@@ -694,8 +973,10 @@ async function submitLead() {
   const btn = document.getElementById('lead-submit-btn');
   btn.disabled = true; btn.textContent = 'Saving…';
 
-  const ratingEl = document.querySelector('input[name="lead-rating"]:checked');
-  const newStatus= document.getElementById('lf-status').value;
+  const ratingEl  = document.querySelector('input[name="lead-rating"]:checked');
+  const newStatus = document.getElementById('lf-status').value;
+  const schVal    = document.getElementById('lf-scheduled-at').value;
+  const scheduledAt = (DATETIME_STATUSES.includes(newStatus) && schVal) ? new Date(schVal).toISOString() : null;
 
   const payload = {
     company_name:  company,
@@ -707,21 +988,31 @@ async function submitLead() {
     rating:        ratingEl ? parseInt(ratingEl.value) : null,
     notes:         document.getElementById('lf-notes').value.trim()        || null,
     status:        newStatus,
+    scheduled_at:  scheduledAt,
     created_by:    document.getElementById('lf-created-by').value.trim()   || currentUserName,
   };
 
-  let error, data;
+  let error;
   if (editingId) {
     const oldLead = allLeads.find(l => l.id === editingId);
+    const oldStatus = oldLead?.status;
     ({ error } = await sb.from('leads').update(payload).eq('id', editingId));
-    // auto-convert if status changed to converted
-    if (!error && newStatus === 'converted' && oldLead?.status !== 'converted') {
+
+    if (!error && oldStatus !== newStatus) {
+      await logStatusChange(editingId, oldStatus, newStatus, scheduledAt);
+    }
+    if (!error && newStatus === 'converted' && oldStatus !== 'converted') {
       await convertLeadToClient({ ...oldLead, ...payload });
     }
   } else {
-    ({ error, data } = await sb.from('leads').insert([payload]).select());
-    if (!error && newStatus === 'converted') {
-      await convertLeadToClient(payload);
+    const { error: insErr, data } = await sb.from('leads').insert([payload]).select();
+    error = insErr;
+    if (!error && data && data[0]) {
+      // Log initial status as a creation entry
+      await logStatusChange(data[0].id, null, newStatus, scheduledAt);
+      if (newStatus === 'converted') {
+        await convertLeadToClient(payload);
+      }
     }
   }
 
@@ -738,14 +1029,30 @@ async function submitLead() {
 }
 
 // ════════════════════════════════════════════
-// VIEW LEAD
+// VIEW LEAD — with status history timeline
 // ════════════════════════════════════════════
-function viewLead(id) {
+async function viewLead(id) {
   const l = allLeads.find(x => x.id === id);
   if (!l) return;
   const cfg   = STATUS_CONFIG[l.status] || STATUS_CONFIG.called;
   const stars = '★'.repeat(l.rating||0)+'☆'.repeat(5-(l.rating||0));
   const dt    = new Date(l.created_at);
+
+  // Scheduled/followup datetime display
+  let scheduledRow = '';
+  if (l.scheduled_at && (l.status === 'scheduled' || l.status === 'followup')) {
+    const sd  = new Date(l.scheduled_at);
+    const scfg = STATUS_CONFIG[l.status];
+    scheduledRow = `
+      <div class="detail-row">
+        <span class="detail-key">${l.status === 'scheduled' ? '📅 Scheduled For' : '🔄 Follow Up On'}</span>
+        <span class="detail-val" style="color:${scfg.color};font-weight:700">
+          ${sd.toLocaleDateString('en-IN', {weekday:'short',day:'numeric',month:'short',year:'numeric'})}
+          &nbsp;at&nbsp;${sd.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}
+        </span>
+      </div>`;
+  }
+
   document.getElementById('view-title').textContent = l.company_name;
   document.getElementById('view-body').innerHTML = `
     <div class="detail-row"><span class="detail-key">Company</span><span class="detail-val"><strong>${l.company_name}</strong></span></div>
@@ -756,13 +1063,89 @@ function viewLead(id) {
     <div class="detail-row"><span class="detail-key">Profile Link</span><span class="detail-val">${l.profile_link?`<a href="${l.profile_link}" target="_blank" style="color:var(--navy-accent)">${l.profile_link}</a>`:'—'}</span></div>
     <div class="detail-row"><span class="detail-key">Rating</span><span class="detail-val"><span class="stars">${stars}</span></span></div>
     <div class="detail-row"><span class="detail-key">Status</span><span class="detail-val"><span class="status-pill ${cfg.cls}">${cfg.icon} ${cfg.label}</span></span></div>
+    ${scheduledRow}
     <div class="detail-row"><span class="detail-key">Notes</span><span class="detail-val" style="color:var(--text-muted)">${l.notes||'—'}</span></div>
     <div class="detail-row"><span class="detail-key">Created By</span><span class="detail-val">${l.created_by||'—'}</span></div>
     <div class="detail-row"><span class="detail-key">Date & Time</span><span class="detail-val" style="color:var(--text-muted)">${dt.toLocaleString('en-IN')}</span></div>
+
+    <div class="tl-section-title">📋 Status History</div>
+    <div class="timeline" id="view-timeline">
+      <div style="font-size:12px;color:#94A3B8;padding:8px 0">Loading history…</div>
+    </div>
   `;
+
   document.getElementById('view-edit-btn').onclick = () => { closeViewModal(); editLead(id); };
   document.getElementById('view-overlay').classList.add('open');
+
+  // Load status logs
+  loadStatusTimeline(id);
 }
+
+async function loadStatusTimeline(leadId) {
+  const { data, error } = await sb
+    .from('lead_status_logs')
+    .select('*')
+    .eq('lead_id', leadId)
+    .order('changed_at', { ascending: true });
+
+  const container = document.getElementById('view-timeline');
+  if (!container) return;
+
+  if (error) {
+    container.innerHTML = `<div style="font-size:12px;color:#EF4444">Failed to load history.</div>`;
+    return;
+  }
+
+  if (!data || !data.length) {
+    container.innerHTML = `<div style="font-size:12px;color:#94A3B8;padding:8px 0">No status changes recorded yet.</div>`;
+    return;
+  }
+
+  container.innerHTML = data.map(log => {
+    const toCfg   = STATUS_CONFIG[log.to_status]   || { label: log.to_status,   icon: '●', color: '#64748B', bar: '#94A3B8' };
+    const fromCfg = log.from_status ? (STATUS_CONFIG[log.from_status] || { label: log.from_status, icon: '●' }) : null;
+    const changedAt = new Date(log.changed_at);
+    const changedStr = changedAt.toLocaleDateString('en-IN', {day:'numeric',month:'short',year:'numeric'}) +
+                       ' at ' + changedAt.toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit'});
+
+    // Scheduled/followup datetime badge
+    let scheduledBadge = '';
+    if (log.scheduled_at && DATETIME_STATUSES.includes(log.to_status)) {
+      const sd = new Date(log.scheduled_at);
+      const sdStr = sd.toLocaleDateString('en-IN', {weekday:'short',day:'numeric',month:'short'}) +
+                    ' at ' + sd.toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit'});
+      const cls = log.to_status === 'scheduled' ? 'timeline-scheduled' : 'timeline-followup';
+      const lbl = log.to_status === 'scheduled' ? '📅 Scheduled for' : '🔄 Follow up on';
+      scheduledBadge = `<div class="${cls}">${lbl}: ${sdStr}</div>`;
+    }
+
+    const isCreation = !log.from_status;
+    const dotBg = toCfg.bar || '#94A3B8';
+
+    return `
+      <div class="timeline-item">
+        <div class="timeline-dot" style="background:${dotBg}20;border:2px solid ${dotBg}">
+          <span style="font-size:13px">${toCfg.icon}</span>
+        </div>
+        <div class="timeline-content">
+          <div class="timeline-main">
+            ${isCreation
+              ? `<span>Lead created as <span class="status-pill ${toCfg.cls}" style="font-size:11px">${toCfg.icon} ${toCfg.label}</span></span>`
+              : `<span class="status-pill ${fromCfg.cls}" style="font-size:11px">${fromCfg.icon} ${fromCfg.label}</span>
+                 <span class="timeline-arrow">→</span>
+                 <span class="status-pill ${toCfg.cls}" style="font-size:11px">${toCfg.icon} ${toCfg.label}</span>`
+            }
+          </div>
+          ${scheduledBadge}
+          <div class="timeline-meta">
+            ${changedStr}${log.changed_by ? ` &nbsp;·&nbsp; by <strong>${log.changed_by}</strong>` : ''}
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
 function closeViewModal() { document.getElementById('view-overlay').classList.remove('open'); }
 
 // ════════════════════════════════════════════
@@ -782,7 +1165,7 @@ async function deleteLead(id) {
 function exportLeads() {
   const list = filteredLeads.length ? filteredLeads : allLeads;
   if (!list.length) { showToast('No leads to export.', 'info'); return; }
-  const headers = ['company_name','phone','business_type','address','project_type','profile_link','rating','notes','status','created_by','created_at'];
+  const headers = ['company_name','phone','business_type','address','project_type','profile_link','rating','notes','status','scheduled_at','created_by','created_at'];
   const rows = list.map(l => headers.map(h => {
     const v = l[h] || '';
     return `"${String(v).replace(/"/g,'""')}"`;
@@ -831,7 +1214,6 @@ function parseCSV(file) {
     const VALID_STATUSES = Object.keys(STATUS_CONFIG);
 
     importRows = lines.slice(1).map(line => {
-      // handle quoted commas
       const cols = [];
       let inQuote = false, cur = '';
       for (const ch of line) {
@@ -860,7 +1242,6 @@ function parseCSV(file) {
 
     if (!importRows.length) { showToast('No valid rows found in CSV.', 'error'); return; }
 
-    // Show preview
     const preview = document.getElementById('import-preview');
     preview.innerHTML = `
       <div style="font-size:13px;font-weight:600;color:var(--navy-dark);margin-bottom:10px">
@@ -900,12 +1281,24 @@ async function confirmImport() {
   const btn = document.getElementById('import-confirm-btn');
   btn.disabled = true; btn.textContent = 'Importing…';
 
-  const { error } = await sb.from('leads').insert(importRows);
+  const { error, data } = await sb.from('leads').insert(importRows).select();
   if (error) {
     showToast('Import failed: ' + error.message, 'error');
     btn.disabled = false; btn.textContent = '⬆ Import Records';
     return;
   }
+
+  // Log creation entries for imported leads
+  if (data && data.length) {
+    const logs = data.map(l => ({
+      lead_id:     l.id,
+      from_status: null,
+      to_status:   l.status || 'called',
+      changed_by:  currentUserName,
+    }));
+    await sb.from('lead_status_logs').insert(logs);
+  }
+
   showToast(`✅ ${importRows.length} leads imported successfully!`, 'success');
   closeImportModal();
   btn.disabled = false; btn.textContent = '⬆ Import Records';
