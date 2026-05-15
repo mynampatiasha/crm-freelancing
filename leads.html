@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CRM Freelancing — Leads</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    /* ── LEAD AVATAR ── */
+    .lead-avatar { width:34px;height:34px;border-radius:8px;background:#EDE9FE;color:#6D28D9;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-right:8px; }
+    .td-lead { display:flex;align-items:center; }
+
+    /* ── STATUS BADGES ── */
+    .status-called      { background:#DBEAFE;color:#1D4ED8; }
+    .status-accepted    { background:#DCFCE7;color:#15803D; }
+    .status-scheduled   { background:#EDE9FE;color:#6D28D9; }
+    .status-followup    { background:#FEF3C7;color:#B45309; }
+    .status-converted   { background:#D1FAE5;color:#065F46;font-weight:700; }
+    .status-cancelled   { background:#FEE2E2;color:#B91C1C; }
+    .status-dontwant    { background:#F1F5F9;color:#475569; }
+
+    .status-pill {
+      display:inline-flex;align-items:center;gap:5px;
+      padding:3px 10px;border-radius:20px;font-size:11.5px;font-weight:600;
+      white-space:nowrap;
+    }
+
+    /* ── STATUS PIPELINE CARDS ── */
+    .pipeline-grid {
+      display:grid;
+      grid-template-columns:repeat(7,1fr);
+      gap:10px;
+      margin-bottom:20px;
+    }
+    @media(max-width:900px){ .pipeline-grid { grid-template-columns:repeat(4,1fr); } }
+    @media(max-width:560px){ .pipeline-grid { grid-template-columns:repeat(2,1fr); } }
+
+    .pipeline-card {
+      background:#fff;border-radius:10px;padding:12px 14px;
+      border:2px solid transparent;cursor:pointer;
+      box-shadow:0 1px 6px rgba(0,0,0,0.06);
+      transition:border-color 0.2s,transform 0.15s,box-shadow 0.2s;
+      position:relative;overflow:hidden;
+    }
+    .pipeline-card:hover { transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,0.1); }
+    .pipeline-card.active { border-color:var(--accent-color,#3D8EFF);box-shadow:0 4px 16px rgba(61,142,255,0.18); }
+    .pipeline-card .pc-bar {
+      position:absolute;bottom:0;left:0;right:0;height:3px;
+      background:var(--accent-color,#3D8EFF);
+    }
+    .pipeline-card .pc-label { font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-muted,#94A3B8);margin-bottom:6px; }
+    .pipeline-card .pc-count { font-size:26px;font-weight:800;color:var(--pc-color,#0D1B3E);line-height:1; }
+    .pipeline-card .pc-icon  { font-size:18px;margin-bottom:4px; }
+
+    /* ── FILTER ROW ── */
+    .filter-row { display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px; }
+    .filter-row input,.filter-row select {
+      background:#fff;border:1.5px solid var(--card-border);
+      border-radius:var(--r);padding:8px 12px;
+      color:var(--text);font-family:var(--font);font-size:13px;
+      outline:none;transition:border-color 0.2s;
+    }
+    .filter-row input:focus,.filter-row select:focus { border-color:var(--navy-accent); }
+    .filter-row input[type="text"] { flex:1;min-width:160px; }
+    .filter-row input[type="date"] { min-width:130px; }
+
+    /* ── QUICK STATUS CHANGE ── */
+    .quick-status {
+      appearance:none;border:1.5px solid var(--card-border);
+      border-radius:20px;padding:3px 22px 3px 10px;
+      font-size:11.5px;font-weight:600;cursor:pointer;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2394A3B8'/%3E%3C/svg%3E");
+      background-repeat:no-repeat;background-position:right 7px center;
+      transition:border-color 0.2s;
+    }
+
+    /* ── MOBILE TOPBAR ── */
+    .topbar {
+      display:none;position:fixed;top:0;left:0;right:0;
+      height:56px;background:#0D1B3E;z-index:150;
+      align-items:center;padding:0 16px;gap:12px;
+    }
+    .topbar .brand { font-size:18px;font-weight:800;color:#fff;letter-spacing:-0.5px; }
+    .topbar .brand span { color:#3D8EFF; }
+
+    @media(max-width:768px){
+      .topbar { display:flex; }
+      .main { padding-top:56px !important; }
+      .app-shell { display:block !important; }
+      .sidebar {
+        position:fixed !important;top:0;left:-280px;
+        width:260px;height:100vh;z-index:300;
+        transition:left 0.3s cubic-bezier(0.4,0,0.2,1);
+        overflow-y:auto;box-shadow:4px 0 24px rgba(0,0,0,0.3);
+      }
+      .sidebar.open { left:0 !important; }
+    }
+
+    /* ── HAMBURGER ── */
+    .hamburger-btn {
+      background:none;border:none;cursor:pointer;
+      padding:6px;display:flex;flex-direction:column;
+      gap:5px;flex-shrink:0;
+    }
+    .hamburger-btn span {
+      display:block;width:22px;height:2px;
+      background:#fff;border-radius:2px;transition:all 0.3s ease;
+    }
+    .hamburger-btn.open span:nth-child(1){ transform:translateY(7px) rotate(45deg); }
+    .hamburger-btn.open span:nth-child(2){ opacity:0; }
+    .hamburger-btn.open span:nth-child(3){ transform:translateY(-7px) rotate(-45deg); }
+
+    /* ── OVERLAY ── */
+    .sidebar-overlay {
+      display:none;position:fixed;inset:0;
+      background:rgba(0,0,0,0.5);z-index:200;backdrop-filter:blur(2px);
+    }
+    .sidebar-overlay.active { display:block; }
+
+    /* ── SIDEBAR CLOSE ── */
+    .sidebar-close {
+      display:none;position:absolute;top:14px;right:14px;
+      width:30px;height:30px;border-radius:50%;
+      background:rgba(255,255,255,0.12);border:none;
+      color:#fff;font-size:16px;cursor:pointer;
+      align-items:center;justify-content:center;transition:background 0.2s;
+    }
+    .sidebar-close:hover { background:rgba(255,255,255,0.25); }
+    @media(max-width:768px){ .sidebar-close { display:flex; } }
+
+    /* ── NAV ITEMS ── */
+    .nav-item { font-size:15px !important;color:#ffffff !important;opacity:0.82;transition:opacity 0.15s,background 0.15s; }
+    .nav-item:hover { opacity:1; }
+    .nav-item.active { opacity:1;color:#ffffff !important; }
+    .nav-label { font-size:11px !important;color:rgba(255,255,255,0.4) !important;letter-spacing:0.1em; }
+
+    /* ── SIDEBAR FOOTER ── */
+    .sidebar-footer { padding:14px 16px 18px;border-top:1px solid rgba(255,255,255,0.1); }
+    .user-info { display:flex;align-items:center;gap:10px;margin-bottom:12px; }
+    .user-avatar {
+      width:38px;height:38px;border-radius:50%;
+      background:linear-gradient(135deg,#3D8EFF,#1D4ED8);
+      color:#fff;font-weight:700;font-size:14px;
+      display:flex;align-items:center;justify-content:center;
+      flex-shrink:0;box-shadow:0 0 0 2px rgba(255,255,255,0.2);
+    }
+    .user-name  { font-size:13.5px;font-weight:600;color:#ffffff;line-height:1.2; }
+    .user-email { font-size:11px;color:rgba(255,255,255,0.5);margin-top:1px; }
+    .btn-logout {
+      width:100%;display:flex;align-items:center;justify-content:center;
+      gap:8px;padding:9px 14px;border-radius:8px;
+      border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.07);
+      color:rgba(255,255,255,0.75);font-family:var(--font,'Outfit',sans-serif);
+      font-size:13px;font-weight:500;cursor:pointer;
+      transition:background 0.2s,color 0.2s,border-color 0.2s;
+    }
+    .btn-logout:hover { background:rgba(239,68,68,0.18);border-color:rgba(239,68,68,0.4);color:#FCA5A5; }
+
+    /* ── CONVERT HIGHLIGHT ROW ── */
+    tr.row-converted td { background:#F0FDF4 !important; }
+    tr.row-cancelled td, tr.row-dontwant td { opacity:0.65; }
+
+    /* ── IMPORT MODAL DROPZONE ── */
+    .dropzone {
+      border:2px dashed var(--card-border);border-radius:10px;
+      padding:32px;text-align:center;cursor:pointer;
+      transition:border-color 0.2s,background 0.2s;
+    }
+    .dropzone:hover,.dropzone.drag-over {
+      border-color:var(--navy-accent);background:#EFF6FF;
+    }
+    .dropzone .dz-icon { font-size:36px;margin-bottom:10px; }
+    .dropzone p { font-size:13px;color:var(--text-muted);margin:0; }
+  </style>
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar">
+    <button class="sidebar-close" onclick="closeSidebar()">✕</button>
+    <div class="sidebar-brand">
+      <div class="brand-name">CRM<span>Freelancing</span></div>
+      <div class="brand-sub">Fleet Management</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-label">Main</div>
+      <a href="dashboard.html" class="nav-item" data-page="dashboard.html" onclick="closeSidebar()"><span class="nav-icon">⬛</span> Dashboard</a>
+      <a href="leads.html"     class="nav-item active" data-page="leads.html" onclick="closeSidebar()"><span class="nav-icon">🎯</span> Leads</a>
+      <a href="clients.html"   class="nav-item" data-page="clients.html" onclick="closeSidebar()"><span class="nav-icon">🏢</span> Clients</a>
+      <a href="projects.html"  class="nav-item" data-page="projects.html" onclick="closeSidebar()"><span class="nav-icon">📁</span> Projects</a>
+      <a href="payments.html"  class="nav-item" data-page="payments.html" onclick="closeSidebar()"><span class="nav-icon">💰</span> Payments</a>
+      <div class="nav-label">Settings</div>
+      <a href="users.html" class="nav-item" data-page="users.html" onclick="closeSidebar()"><span class="nav-icon">👥</span> Users</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar" id="sidebar-user-avatar">?</div>
+        <div>
+          <div class="user-name"  id="sidebar-user-name">Loading…</div>
+          <div class="user-email" id="sidebar-user-email"></div>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="doLogout()">
+        <span style="font-size:15px">→</span> Sign out
+      </button>
+    </div>
+  </aside>
+
+  <div class="topbar">
+    <button class="hamburger-btn" id="hamburger-btn" onclick="toggleSidebar()" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="brand">CRM<span>Freelancing</span></div>
+  </div>
+
+  <main class="main">
+    <div class="page-topbar">
+      <div class="page-topbar-left">
+        <h1>Leads</h1>
+        <p>Track every lead from first call to conversion</p>
+      </div>
+      <div class="page-topbar-right" style="display:flex;gap:8px;flex-wrap:wrap">
+<button class="btn btn-ghost" onclick="openImportModal()" style="background:rgba(255,255,255,0.15);color:#fff;border-color:rgba(255,255,255,0.4);">⬆ Import</button>
+<button class="btn btn-ghost" onclick="exportLeads()" style="background:rgba(255,255,255,0.15);color:#fff;border-color:rgba(255,255,255,0.4);">⬇ Export</button>
+        <button class="btn btn-primary" onclick="openModal()">+ Add Lead</button>
+      </div>
+    </div>
+
+    <div class="page-content">
+
+      <!-- ── PIPELINE STATUS CARDS ── -->
+      <div class="pipeline-grid" id="pipeline-grid">
+        <!-- filled by JS -->
+      </div>
+
+      <!-- ── FILTERS ── -->
+      <div class="filter-row">
+        <input type="text"   id="f-search"     placeholder="Search by company or name…" oninput="applyFilters()" />
+        <input type="date"   id="f-date-from"  onchange="applyFilters()" title="From date" />
+        <input type="date"   id="f-date-to"    onchange="applyFilters()" title="To date" />
+        <select id="f-created-by" onchange="applyFilters()">
+          <option value="">All Team Members</option>
+        </select>
+        <select id="f-status" onchange="applyFilters()">
+          <option value="">All Statuses</option>
+          <option value="called">Called</option>
+          <option value="accepted">Accepted</option>
+          <option value="scheduled">Scheduled</option>
+          <option value="followup">Follow Up</option>
+          <option value="converted">Converted</option>
+          <option value="cancelled">Cancelled</option>
+          <option value="dontwant">Don't Want</option>
+        </select>
+        <button class="btn btn-ghost btn-sm" onclick="clearFilters()">✕ Clear</button>
+      </div>
+
+      <!-- ── TABLE ── -->
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Company</th>
+              <th>Phone</th>
+              <th>Type</th>
+              <th>Rating</th>
+              <th>Status</th>
+              <th>Created By</th>
+              <th>Date & Time</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="leads-tbody">
+            <tr><td colspan="8"><div class="empty"><div class="empty-icon">🎯</div><p>Loading leads…</p></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ════════════════════════════════════════════
+     ADD / EDIT MODAL
+════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modal-title">Add New Lead</h2>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="field span2">
+          <label>Company Name *</label>
+          <input type="text" id="lf-company" required placeholder="e.g. Sunrise Logistics" />
+        </div>
+        <div class="field">
+          <label>Phone</label>
+          <input type="tel" id="lf-phone" placeholder="+91 98765 43210" />
+        </div>
+        <div class="field">
+          <label>Business Type</label>
+          <select id="lf-type">
+            <option value="">Select type</option>
+            <option>Transport</option><option>Logistics</option><option>Tourism</option><option>Corporate</option><option>Other</option>
+          </select>
+        </div>
+        <div class="field span2">
+          <label>Address</label>
+          <input type="text" id="lf-address" placeholder="Full address" />
+        </div>
+        <div class="field">
+          <label>Project Type</label>
+          <input type="text" id="lf-project-type" placeholder="e.g. Fleet Management" />
+        </div>
+        <div class="field">
+          <label>Profile / Website Link</label>
+          <input type="url" id="lf-profile" placeholder="https://…" />
+        </div>
+        <div class="field">
+          <label>Status</label>
+          <select id="lf-status">
+            <option value="called">📞 Called</option>
+            <option value="accepted">✅ Accepted</option>
+            <option value="scheduled">📅 Scheduled</option>
+            <option value="followup">🔄 Follow Up</option>
+            <option value="converted">💼 Converted</option>
+            <option value="cancelled">❌ Cancelled</option>
+            <option value="dontwant">🚫 Don't Want</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Rating (1–5)</label>
+          <div class="star-input">
+            <input type="radio" name="lead-rating" id="ls5" value="5"><label for="ls5">★</label>
+            <input type="radio" name="lead-rating" id="ls4" value="4"><label for="ls4">★</label>
+            <input type="radio" name="lead-rating" id="ls3" value="3"><label for="ls3">★</label>
+            <input type="radio" name="lead-rating" id="ls2" value="2"><label for="ls2">★</label>
+            <input type="radio" name="lead-rating" id="ls1" value="1"><label for="ls1">★</label>
+          </div>
+        </div>
+        <div class="field span2">
+          <label>Created By</label>
+          <input type="text" id="lf-created-by" placeholder="Auto-filled with your name" />
+          <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Auto-filled with logged-in user. Edit if adding on behalf of someone else.</div>
+        </div>
+        <div class="field span2">
+          <label>Notes</label>
+          <textarea id="lf-notes" placeholder="Any additional notes about this lead…"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" id="lead-submit-btn" onclick="submitLead()">Save Lead</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     VIEW MODAL
+════════════════════════════════════════════ -->
+<div class="modal-overlay" id="view-overlay" onclick="if(event.target===this)closeViewModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="view-title">Lead Details</h2>
+      <button class="modal-close" onclick="closeViewModal()">✕</button>
+    </div>
+    <div class="modal-body" id="view-body"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeViewModal()">Close</button>
+      <button class="btn btn-warning btn-sm" id="view-edit-btn">Edit</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     IMPORT MODAL
+════════════════════════════════════════════ -->
+<div class="modal-overlay" id="import-overlay" onclick="if(event.target===this)closeImportModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Import Leads</h2>
+      <button class="modal-close" onclick="closeImportModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="alert alert-info" style="margin-bottom:16px;background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;padding:12px 14px;font-size:13px;color:#1D4ED8">
+        📋 CSV columns: <strong>company_name, phone, business_type, address, project_type, profile_link, rating, notes, status, created_by</strong><br>
+        <span style="font-size:11px;color:#3B82F6;margin-top:4px;display:block">Missing status defaults to "called". Missing rating defaults to 0.</span>
+      </div>
+      <div class="dropzone" id="dropzone"
+        ondragover="event.preventDefault();this.classList.add('drag-over')"
+        ondragleave="this.classList.remove('drag-over')"
+        ondrop="handleDrop(event)"
+        onclick="document.getElementById('csv-file-input').click()">
+        <div class="dz-icon">📂</div>
+        <p><strong>Click to browse</strong> or drag & drop your CSV file here</p>
+        <p style="margin-top:6px;font-size:12px">Supported: .csv</p>
+      </div>
+      <input type="file" id="csv-file-input" accept=".csv" style="display:none" onchange="handleFileSelect(event)" />
+      <div id="import-preview" style="margin-top:14px"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeImportModal()">Cancel</button>
+      <button class="btn btn-primary" id="import-confirm-btn" onclick="confirmImport()" style="display:none">⬆ Import Records</button>
+      <button class="btn btn-ghost btn-sm" onclick="downloadTemplate()">⬇ Download Template</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase.js"></script>
+<script>
+// ════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════
+let allLeads      = [];
+let filteredLeads = [];
+let editingId     = null;
+let importRows    = [];
+let currentUserName = '';
+let activePipelineFilter = '';
+
+// ════════════════════════════════════════════
+// STATUS CONFIG
+// ════════════════════════════════════════════
+const STATUS_CONFIG = {
+  called:    { label:'Called',     icon:'📞', cls:'status-called',    color:'#1D4ED8', bar:'#3B82F6' },
+  accepted:  { label:'Accepted',   icon:'✅', cls:'status-accepted',  color:'#15803D', bar:'#22C55E' },
+  scheduled: { label:'Scheduled',  icon:'📅', cls:'status-scheduled', color:'#6D28D9', bar:'#8B5CF6' },
+  followup:  { label:'Follow Up',  icon:'🔄', cls:'status-followup',  color:'#B45309', bar:'#F59E0B' },
+  converted: { label:'Converted',  icon:'💼', cls:'status-converted', color:'#065F46', bar:'#10B981' },
+  cancelled: { label:'Cancelled',  icon:'❌', cls:'status-cancelled', color:'#B91C1C', bar:'#EF4444' },
+  dontwant:  { label:"Don't Want", icon:'🚫', cls:'status-dontwant',  color:'#475569', bar:'#94A3B8' },
+};
+
+// ════════════════════════════════════════════
+// SIDEBAR
+// ════════════════════════════════════════════
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.contains('open') ? closeSidebar() : openSidebar();
+}
+function openSidebar() {
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('sidebar-overlay').classList.add('active');
+  document.getElementById('hamburger-btn').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('active');
+  const btn = document.getElementById('hamburger-btn');
+  if (btn) btn.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// ════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════
+(async () => {
+  await requireAuth();
+  await loadSidebarUser();
+  setActiveNav();
+  // grab logged-in user name for "created by" default
+  currentUserName = document.getElementById('sidebar-user-name')?.textContent?.trim() || '';
+  await loadLeads();
+})();
+
+// ════════════════════════════════════════════
+// LOAD LEADS
+// ════════════════════════════════════════════
+async function loadLeads() {
+  const { data, error } = await sb.from('leads').select('*').order('created_at', { ascending: false });
+  if (error) {
+    document.getElementById('leads-tbody').innerHTML =
+      `<tr><td colspan="8"><div class="empty"><div class="empty-icon">⚠️</div><p>${error.message}</p></div></td></tr>`;
+    return;
+  }
+  allLeads = data || [];
+  populateCreatedByFilter();
+  applyFilters();
+  renderPipeline();
+}
+
+// ════════════════════════════════════════════
+// PIPELINE CARDS
+// ════════════════════════════════════════════
+function renderPipeline() {
+  const grid = document.getElementById('pipeline-grid');
+  const counts = {};
+  Object.keys(STATUS_CONFIG).forEach(k => counts[k] = 0);
+  allLeads.forEach(l => { if (counts[l.status] !== undefined) counts[l.status]++; });
+
+  grid.innerHTML = Object.entries(STATUS_CONFIG).map(([key, cfg]) => `
+    <div class="pipeline-card ${activePipelineFilter === key ? 'active' : ''}"
+         style="--accent-color:${cfg.bar};--pc-color:${cfg.color}"
+         onclick="togglePipelineFilter('${key}')">
+      <div class="pc-bar"></div>
+      <div class="pc-icon">${cfg.icon}</div>
+      <div class="pc-label">${cfg.label}</div>
+      <div class="pc-count">${counts[key]}</div>
+    </div>
+  `).join('');
+}
+
+function togglePipelineFilter(key) {
+  activePipelineFilter = activePipelineFilter === key ? '' : key;
+  if (activePipelineFilter) {
+    document.getElementById('f-status').value = activePipelineFilter;
+  } else {
+    document.getElementById('f-status').value = '';
+  }
+  renderPipeline();
+  applyFilters();
+}
+
+// ════════════════════════════════════════════
+// FILTERS
+// ════════════════════════════════════════════
+function populateCreatedByFilter() {
+  const names = [...new Set(allLeads.map(l => l.created_by).filter(Boolean))].sort();
+  const sel   = document.getElementById('f-created-by');
+  sel.innerHTML = '<option value="">All Team Members</option>' +
+    names.map(n => `<option value="${n}">${n}</option>`).join('');
+}
+
+function applyFilters() {
+  const q        = document.getElementById('f-search').value.toLowerCase();
+  const dateFrom = document.getElementById('f-date-from').value;
+  const dateTo   = document.getElementById('f-date-to').value;
+  const createdBy= document.getElementById('f-created-by').value;
+  const status   = document.getElementById('f-status').value;
+
+  // keep pipeline card in sync
+  activePipelineFilter = status;
+  renderPipeline();
+
+  filteredLeads = allLeads.filter(l => {
+    if (q && !(l.company_name||'').toLowerCase().includes(q) && !(l.business_type||'').toLowerCase().includes(q)) return false;
+    if (dateFrom && l.created_at < dateFrom) return false;
+    if (dateTo   && l.created_at.slice(0,10) > dateTo) return false;
+    if (createdBy && l.created_by !== createdBy) return false;
+    if (status   && l.status !== status) return false;
+    return true;
+  });
+  renderTable(filteredLeads);
+}
+
+function clearFilters() {
+  document.getElementById('f-search').value     = '';
+  document.getElementById('f-date-from').value  = '';
+  document.getElementById('f-date-to').value    = '';
+  document.getElementById('f-created-by').value = '';
+  document.getElementById('f-status').value     = '';
+  activePipelineFilter = '';
+  renderPipeline();
+  renderTable(allLeads);
+}
+
+// ════════════════════════════════════════════
+// RENDER TABLE
+// ════════════════════════════════════════════
+function renderTable(list) {
+  const tbody = document.getElementById('leads-tbody');
+  if (!list.length) {
+    tbody.innerHTML = `<tr><td colspan="8"><div class="empty"><div class="empty-icon">🎯</div><p>No leads found.</p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = list.map(l => {
+    const ini   = (l.company_name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+    const stars = '★'.repeat(l.rating||0)+'☆'.repeat(5-(l.rating||0));
+    const cfg   = STATUS_CONFIG[l.status] || STATUS_CONFIG.called;
+    const dt    = new Date(l.created_at);
+    const dtStr = dt.toLocaleDateString('en-IN') + ' ' + dt.toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit'});
+    const rowCls= l.status === 'converted' ? 'row-converted' : l.status === 'cancelled' ? 'row-cancelled' : l.status === 'dontwant' ? 'row-dontwant' : '';
+    return `<tr class="${rowCls}">
+      <td><div class="td-lead"><div class="lead-avatar">${ini}</div><strong>${l.company_name}</strong></div></td>
+      <td style="color:var(--text-muted)">${l.phone||'—'}</td>
+      <td>${l.business_type?`<span class="chip">${l.business_type}</span>`:'—'}</td>
+      <td><span class="stars">${stars}</span></td>
+      <td>
+        <select class="quick-status status-pill ${cfg.cls}" onchange="quickStatusChange('${l.id}', this.value, this)">
+          ${Object.entries(STATUS_CONFIG).map(([k,c]) =>
+            `<option value="${k}" ${l.status===k?'selected':''}>${c.icon} ${c.label}</option>`
+          ).join('')}
+        </select>
+      </td>
+      <td style="color:var(--text-muted);font-size:13px">${l.created_by||'—'}</td>
+      <td style="color:var(--text-muted);font-size:12px">${dtStr}</td>
+      <td>
+        <div style="display:flex;gap:5px">
+          <button class="btn btn-ghost btn-xs"    onclick="viewLead('${l.id}')">View</button>
+          <button class="btn btn-warning btn-xs"  onclick="editLead('${l.id}')">Edit</button>
+          <button class="btn btn-danger btn-xs"   onclick="deleteLead('${l.id}')">Delete</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════════
+// QUICK STATUS CHANGE
+// ════════════════════════════════════════════
+async function quickStatusChange(id, newStatus, selectEl) {
+  const lead = allLeads.find(l => l.id === id);
+  if (!lead) return;
+  const oldStatus = lead.status;
+
+  const { error } = await sb.from('leads').update({ status: newStatus }).eq('id', id);
+  if (error) { showToast('Status update failed: ' + error.message, 'error'); selectEl.value = oldStatus; return; }
+
+  lead.status = newStatus;
+
+  // ── AUTO CONVERT ──
+  if (newStatus === 'converted' && oldStatus !== 'converted') {
+    await convertLeadToClient(lead);
+  }
+
+  renderPipeline();
+  applyFilters();
+}
+
+async function convertLeadToClient(lead) {
+  const payload = {
+    company_name:  lead.company_name,
+    phone:         lead.phone   || null,
+    address:       lead.address || null,
+    business_type: lead.business_type || null,
+    project_type:  lead.project_type  || null,
+    profile_link:  lead.profile_link  || null,
+    rating:        lead.rating  || null,
+    notes:         lead.notes   || null,
+  };
+  const { error } = await sb.from('clients').insert([payload]);
+  if (error) {
+    showToast('Lead marked converted but client insert failed: ' + error.message, 'error');
+  } else {
+    showToast(`🎉 "${lead.company_name}" converted and added to Clients!`, 'success');
+  }
+}
+
+// ════════════════════════════════════════════
+// OPEN / CLOSE MODAL
+// ════════════════════════════════════════════
+function openModal(id = null) {
+  editingId = id;
+  document.getElementById('modal-title').textContent    = id ? 'Edit Lead' : 'Add New Lead';
+  document.getElementById('lead-submit-btn').textContent= id ? 'Update Lead' : 'Save Lead';
+
+  if (!id) {
+    document.getElementById('lf-company').value     = '';
+    document.getElementById('lf-phone').value       = '';
+    document.getElementById('lf-type').value        = '';
+    document.getElementById('lf-address').value     = '';
+    document.getElementById('lf-project-type').value= '';
+    document.getElementById('lf-profile').value     = '';
+    document.getElementById('lf-status').value      = 'called';
+    document.getElementById('lf-notes').value       = '';
+    document.getElementById('lf-created-by').value  = currentUserName;
+    document.querySelectorAll('input[name="lead-rating"]').forEach(r => r.checked = false);
+  }
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); editingId = null; }
+
+function editLead(id) {
+  const l = allLeads.find(x => x.id === id);
+  if (!l) return;
+  openModal(id);
+  document.getElementById('lf-company').value      = l.company_name || '';
+  document.getElementById('lf-phone').value        = l.phone || '';
+  document.getElementById('lf-type').value         = l.business_type || '';
+  document.getElementById('lf-address').value      = l.address || '';
+  document.getElementById('lf-project-type').value = l.project_type || '';
+  document.getElementById('lf-profile').value      = l.profile_link || '';
+  document.getElementById('lf-status').value       = l.status || 'called';
+  document.getElementById('lf-notes').value        = l.notes || '';
+  document.getElementById('lf-created-by').value   = l.created_by || '';
+  if (l.rating) { const r = document.getElementById('ls'+l.rating); if(r) r.checked = true; }
+}
+
+// ════════════════════════════════════════════
+// SUBMIT LEAD
+// ════════════════════════════════════════════
+async function submitLead() {
+  const company = document.getElementById('lf-company').value.trim();
+  if (!company) { showToast('Company name is required.', 'error'); return; }
+
+  const btn = document.getElementById('lead-submit-btn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+
+  const ratingEl = document.querySelector('input[name="lead-rating"]:checked');
+  const newStatus= document.getElementById('lf-status').value;
+
+  const payload = {
+    company_name:  company,
+    phone:         document.getElementById('lf-phone').value.trim()        || null,
+    address:       document.getElementById('lf-address').value.trim()      || null,
+    business_type: document.getElementById('lf-type').value                || null,
+    project_type:  document.getElementById('lf-project-type').value.trim() || null,
+    profile_link:  document.getElementById('lf-profile').value.trim()      || null,
+    rating:        ratingEl ? parseInt(ratingEl.value) : null,
+    notes:         document.getElementById('lf-notes').value.trim()        || null,
+    status:        newStatus,
+    created_by:    document.getElementById('lf-created-by').value.trim()   || currentUserName,
+  };
+
+  let error, data;
+  if (editingId) {
+    const oldLead = allLeads.find(l => l.id === editingId);
+    ({ error } = await sb.from('leads').update(payload).eq('id', editingId));
+    // auto-convert if status changed to converted
+    if (!error && newStatus === 'converted' && oldLead?.status !== 'converted') {
+      await convertLeadToClient({ ...oldLead, ...payload });
+    }
+  } else {
+    ({ error, data } = await sb.from('leads').insert([payload]).select());
+    if (!error && newStatus === 'converted') {
+      await convertLeadToClient(payload);
+    }
+  }
+
+  if (error) {
+    showToast('Error: ' + error.message, 'error');
+    btn.disabled = false; btn.textContent = editingId ? 'Update Lead' : 'Save Lead';
+    return;
+  }
+
+  showToast(editingId ? 'Lead updated!' : 'Lead added!', 'success');
+  closeModal();
+  btn.disabled = false; btn.textContent = 'Save Lead';
+  await loadLeads();
+}
+
+// ════════════════════════════════════════════
+// VIEW LEAD
+// ════════════════════════════════════════════
+function viewLead(id) {
+  const l = allLeads.find(x => x.id === id);
+  if (!l) return;
+  const cfg   = STATUS_CONFIG[l.status] || STATUS_CONFIG.called;
+  const stars = '★'.repeat(l.rating||0)+'☆'.repeat(5-(l.rating||0));
+  const dt    = new Date(l.created_at);
+  document.getElementById('view-title').textContent = l.company_name;
+  document.getElementById('view-body').innerHTML = `
+    <div class="detail-row"><span class="detail-key">Company</span><span class="detail-val"><strong>${l.company_name}</strong></span></div>
+    <div class="detail-row"><span class="detail-key">Phone</span><span class="detail-val">${l.phone||'—'}</span></div>
+    <div class="detail-row"><span class="detail-key">Address</span><span class="detail-val">${l.address||'—'}</span></div>
+    <div class="detail-row"><span class="detail-key">Business Type</span><span class="detail-val">${l.business_type?`<span class="chip">${l.business_type}</span>`:'—'}</span></div>
+    <div class="detail-row"><span class="detail-key">Project Type</span><span class="detail-val">${l.project_type||'—'}</span></div>
+    <div class="detail-row"><span class="detail-key">Profile Link</span><span class="detail-val">${l.profile_link?`<a href="${l.profile_link}" target="_blank" style="color:var(--navy-accent)">${l.profile_link}</a>`:'—'}</span></div>
+    <div class="detail-row"><span class="detail-key">Rating</span><span class="detail-val"><span class="stars">${stars}</span></span></div>
+    <div class="detail-row"><span class="detail-key">Status</span><span class="detail-val"><span class="status-pill ${cfg.cls}">${cfg.icon} ${cfg.label}</span></span></div>
+    <div class="detail-row"><span class="detail-key">Notes</span><span class="detail-val" style="color:var(--text-muted)">${l.notes||'—'}</span></div>
+    <div class="detail-row"><span class="detail-key">Created By</span><span class="detail-val">${l.created_by||'—'}</span></div>
+    <div class="detail-row"><span class="detail-key">Date & Time</span><span class="detail-val" style="color:var(--text-muted)">${dt.toLocaleString('en-IN')}</span></div>
+  `;
+  document.getElementById('view-edit-btn').onclick = () => { closeViewModal(); editLead(id); };
+  document.getElementById('view-overlay').classList.add('open');
+}
+function closeViewModal() { document.getElementById('view-overlay').classList.remove('open'); }
+
+// ════════════════════════════════════════════
+// DELETE LEAD
+// ════════════════════════════════════════════
+async function deleteLead(id) {
+  if (!confirm('Delete this lead? This cannot be undone.')) return;
+  const { error } = await sb.from('leads').delete().eq('id', id);
+  if (error) { showToast('Delete failed: ' + error.message, 'error'); return; }
+  showToast('Lead deleted.', 'info');
+  await loadLeads();
+}
+
+// ════════════════════════════════════════════
+// EXPORT
+// ════════════════════════════════════════════
+function exportLeads() {
+  const list = filteredLeads.length ? filteredLeads : allLeads;
+  if (!list.length) { showToast('No leads to export.', 'info'); return; }
+  const headers = ['company_name','phone','business_type','address','project_type','profile_link','rating','notes','status','created_by','created_at'];
+  const rows = list.map(l => headers.map(h => {
+    const v = l[h] || '';
+    return `"${String(v).replace(/"/g,'""')}"`;
+  }).join(','));
+  const csv  = [headers.join(','), ...rows].join('\n');
+  const blob = new Blob([csv], { type:'text/csv' });
+  const a    = document.createElement('a');
+  a.href     = URL.createObjectURL(blob);
+  a.download = `leads_export_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showToast(`Exported ${list.length} leads.`, 'success');
+}
+
+// ════════════════════════════════════════════
+// IMPORT
+// ════════════════════════════════════════════
+function openImportModal() {
+  importRows = [];
+  document.getElementById('import-preview').innerHTML = '';
+  document.getElementById('import-confirm-btn').style.display = 'none';
+  document.getElementById('csv-file-input').value = '';
+  document.getElementById('import-overlay').classList.add('open');
+}
+function closeImportModal() { document.getElementById('import-overlay').classList.remove('open'); }
+
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('dropzone').classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file) parseCSV(file);
+}
+function handleFileSelect(e) {
+  const file = e.target.files[0];
+  if (file) parseCSV(file);
+}
+
+function parseCSV(file) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const text  = e.target.result;
+    const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+    if (lines.length < 2) { showToast('CSV is empty or has no data rows.', 'error'); return; }
+
+    const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g,'').toLowerCase());
+    const VALID_STATUSES = Object.keys(STATUS_CONFIG);
+
+    importRows = lines.slice(1).map(line => {
+      // handle quoted commas
+      const cols = [];
+      let inQuote = false, cur = '';
+      for (const ch of line) {
+        if (ch === '"') { inQuote = !inQuote; }
+        else if (ch === ',' && !inQuote) { cols.push(cur.trim()); cur = ''; }
+        else cur += ch;
+      }
+      cols.push(cur.trim());
+
+      const row = {};
+      headers.forEach((h, i) => { row[h] = (cols[i] || '').replace(/^"|"$/g,''); });
+
+      return {
+        company_name:  row.company_name  || '',
+        phone:         row.phone         || null,
+        business_type: row.business_type || null,
+        address:       row.address       || null,
+        project_type:  row.project_type  || null,
+        profile_link:  row.profile_link  || null,
+        rating:        parseInt(row.rating) || null,
+        notes:         row.notes         || null,
+        status:        VALID_STATUSES.includes(row.status) ? row.status : 'called',
+        created_by:    row.created_by    || currentUserName,
+      };
+    }).filter(r => r.company_name);
+
+    if (!importRows.length) { showToast('No valid rows found in CSV.', 'error'); return; }
+
+    // Show preview
+    const preview = document.getElementById('import-preview');
+    preview.innerHTML = `
+      <div style="font-size:13px;font-weight:600;color:var(--navy-dark);margin-bottom:10px">
+        Found <strong>${importRows.length}</strong> valid records to import:
+      </div>
+      <div style="max-height:200px;overflow-y:auto;border:1.5px solid var(--card-border);border-radius:8px">
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead style="background:#F8FAFC">
+            <tr>
+              <th style="padding:8px 10px;text-align:left;border-bottom:1px solid #E2E8F0">Company</th>
+              <th style="padding:8px 10px;text-align:left;border-bottom:1px solid #E2E8F0">Phone</th>
+              <th style="padding:8px 10px;text-align:left;border-bottom:1px solid #E2E8F0">Status</th>
+              <th style="padding:8px 10px;text-align:left;border-bottom:1px solid #E2E8F0">Created By</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${importRows.map(r => {
+              const cfg = STATUS_CONFIG[r.status] || STATUS_CONFIG.called;
+              return `<tr>
+                <td style="padding:7px 10px;border-bottom:1px solid #F1F5F9"><strong>${r.company_name}</strong></td>
+                <td style="padding:7px 10px;border-bottom:1px solid #F1F5F9;color:#64748B">${r.phone||'—'}</td>
+                <td style="padding:7px 10px;border-bottom:1px solid #F1F5F9"><span class="status-pill ${cfg.cls}">${cfg.icon} ${cfg.label}</span></td>
+                <td style="padding:7px 10px;border-bottom:1px solid #F1F5F9;color:#64748B">${r.created_by||'—'}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+    document.getElementById('import-confirm-btn').style.display = 'inline-flex';
+  };
+  reader.readAsText(file);
+}
+
+async function confirmImport() {
+  if (!importRows.length) return;
+  const btn = document.getElementById('import-confirm-btn');
+  btn.disabled = true; btn.textContent = 'Importing…';
+
+  const { error } = await sb.from('leads').insert(importRows);
+  if (error) {
+    showToast('Import failed: ' + error.message, 'error');
+    btn.disabled = false; btn.textContent = '⬆ Import Records';
+    return;
+  }
+  showToast(`✅ ${importRows.length} leads imported successfully!`, 'success');
+  closeImportModal();
+  btn.disabled = false; btn.textContent = '⬆ Import Records';
+  await loadLeads();
+}
+
+function downloadTemplate() {
+  const headers = 'company_name,phone,business_type,address,project_type,profile_link,rating,notes,status,created_by';
+  const sample  = '"Sunrise Logistics","+91 9876543210","Logistics","MG Road Bangalore","Fleet Management","https://sunrise.com","4","Good potential lead","called","Rahul Sharma"';
+  const csv     = headers + '\n' + sample;
+  const blob    = new Blob([csv], { type:'text/csv' });
+  const a       = document.createElement('a');
+  a.href        = URL.createObjectURL(blob);
+  a.download    = 'leads_import_template.csv';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showToast('Template downloaded!', 'success');
+}
+</script>
+</body>
+</html>
