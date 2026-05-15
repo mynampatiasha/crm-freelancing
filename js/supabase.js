@@ -2,11 +2,25 @@ const SUPABASE_URL = 'https://bwvqyldgewxoeyxqooyw.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_hyC6dy3uyhMUEQZZ7Ysw2g_VzhUdYPC';
 
 const { createClient } = supabase;
-const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ── Persist session in localStorage for instant auth on reload ────────────────
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: {
+    persistSession:     true,
+    storageKey:         'crm-session',
+    storage:            window.localStorage,
+    autoRefreshToken:   true,
+    detectSessionInUrl: true,
+  }
+});
+
+// ── Warm up connection immediately (avoids cold-start delay) ──────────────────
+sb.from('users').select('id').limit(1).then(() => {});
 
 // ── AUTH HELPERS ──────────────────────────────────────────────────────────────
 
 async function getSession() {
+  // Try localStorage first — instant, no network call
   const { data } = await sb.auth.getSession();
   return data.session;
 }
@@ -19,7 +33,6 @@ async function getUser() {
 async function requireAuth() {
   const session = await getSession();
   if (!session) {
-    // Works for both file:// and http:// hosting
     const base = window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1);
     window.location.href = base + 'index.html';
   }
@@ -66,12 +79,26 @@ function initials(name) {
 async function loadSidebarUser() {
   const user = await getUser();
   if (!user) return;
+
+  // Check cache first
+  const cached = sessionStorage.getItem('crm-user-profile');
+  if (cached) {
+    const p = JSON.parse(cached);
+    _applySidebarUser(p.name, user.email);
+    return;
+  }
+
   const { data: profile } = await sb.from('users').select('name').eq('auth_id', user.id).maybeSingle();
   const name = profile?.name || user.email;
+  sessionStorage.setItem('crm-user-profile', JSON.stringify({ name }));
+  _applySidebarUser(name, user.email);
+}
+
+function _applySidebarUser(name, email) {
   const el = document.getElementById('sidebar-user-name');
   const em = document.getElementById('sidebar-user-email');
   const av = document.getElementById('sidebar-user-avatar');
   if (el) el.textContent = name;
-  if (em) em.textContent = user.email;
+  if (em) em.textContent = email;
   if (av) av.textContent = initials(name);
 }
