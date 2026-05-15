@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CRM Freelancing — Payments</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .filter-row { display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px; }
+    .filter-row input,.filter-row select { background:#fff;border:1.5px solid var(--card-border);border-radius:var(--r);padding:8px 12px;color:var(--text);font-family:var(--font);font-size:13px;outline:none;transition:border-color 0.2s; }
+    .filter-row input:focus,.filter-row select:focus { border-color:var(--navy-accent); }
+    .amount-cell { font-weight:700;color:var(--green);font-size:14px; }
+    .proof-link { color:var(--navy-accent);font-size:12px;text-decoration:none; }
+    .proof-link:hover { text-decoration:underline; }
+    .split-info { font-size:11px;color:var(--text-muted);margin-top:2px; }
+
+    /* ── MOBILE TOPBAR ── */
+    .topbar { display:none;position:fixed;top:0;left:0;right:0;height:56px;background:#0D1B3E;z-index:150;align-items:center;padding:0 16px;gap:12px; }
+    .topbar .brand { font-size:18px;font-weight:800;color:#fff;letter-spacing:-0.5px; }
+    .topbar .brand span { color:#3D8EFF; }
+    @media (max-width:768px) {
+      .topbar { display:flex; }
+      .main { padding-top:56px !important; }
+      .app-shell { display:block !important; }
+      .sidebar { position:fixed !important;top:0;left:-280px;width:260px;height:100vh;z-index:300;transition:left 0.3s cubic-bezier(0.4,0,0.2,1);overflow-y:auto;box-shadow:4px 0 24px rgba(0,0,0,0.3); }
+      .sidebar.open { left:0 !important; }
+    }
+    .hamburger-btn { background:none;border:none;cursor:pointer;padding:6px;display:flex;flex-direction:column;gap:5px;flex-shrink:0; }
+    .hamburger-btn span { display:block;width:22px;height:2px;background:#fff;border-radius:2px;transition:all 0.3s ease; }
+    .hamburger-btn.open span:nth-child(1) { transform:translateY(7px) rotate(45deg); }
+    .hamburger-btn.open span:nth-child(2) { opacity:0; }
+    .hamburger-btn.open span:nth-child(3) { transform:translateY(-7px) rotate(-45deg); }
+    .sidebar-overlay { display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;backdrop-filter:blur(2px); }
+    .sidebar-overlay.active { display:block; }
+    .sidebar-close { display:none;position:absolute;top:14px;right:14px;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,0.12);border:none;color:#fff;font-size:16px;cursor:pointer;align-items:center;justify-content:center;transition:background 0.2s; }
+    .sidebar-close:hover { background:rgba(255,255,255,0.25); }
+    @media (max-width:768px) { .sidebar-close { display:flex; } }
+    .nav-item { font-size:15px !important;color:#ffffff !important;opacity:0.82;transition:opacity 0.15s,background 0.15s; }
+    .nav-item:hover { opacity:1; }
+    .nav-item.active { opacity:1;color:#ffffff !important; }
+    .nav-label { font-size:11px !important;color:rgba(255,255,255,0.4) !important;letter-spacing:0.1em; }
+    .sidebar-footer { padding:14px 16px 18px;border-top:1px solid rgba(255,255,255,0.1); }
+    .user-info { display:flex;align-items:center;gap:10px;margin-bottom:12px; }
+    .user-avatar { width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#3D8EFF,#1D4ED8);color:#fff;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 0 0 2px rgba(255,255,255,0.2); }
+    .user-name { font-size:13.5px;font-weight:600;color:#ffffff;line-height:1.2; }
+    .user-email { font-size:11px;color:rgba(255,255,255,0.5);margin-top:1px; }
+    .btn-logout { width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:9px 14px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.75);font-family:var(--font,'Outfit',sans-serif);font-size:13px;font-weight:500;cursor:pointer;transition:background 0.2s,color 0.2s,border-color 0.2s; }
+    .btn-logout:hover { background:rgba(239,68,68,0.18);border-color:rgba(239,68,68,0.4);color:#FCA5A5; }
+  </style>
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar">
+    <button class="sidebar-close" onclick="closeSidebar()">✕</button>
+    <div class="sidebar-brand">
+      <div class="brand-name">CRM<span>Freelancing</span></div>
+      <div class="brand-sub">Your agency, fully in control</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-label">Main</div>
+      <a href="dashboard.html" class="nav-item" data-page="dashboard.html" onclick="closeSidebar()"><span class="nav-icon">⬛</span> Dashboard</a>
+      <a href="clients.html"   class="nav-item" data-page="clients.html" onclick="closeSidebar()"><span class="nav-icon">🏢</span> Clients</a>
+      <a href="projects.html"  class="nav-item" data-page="projects.html" onclick="closeSidebar()"><span class="nav-icon">📁</span> Projects</a>
+      <a href="payments.html"  class="nav-item active" data-page="payments.html" onclick="closeSidebar()"><span class="nav-icon">💰</span> Payments</a>
+      <div class="nav-label">Settings</div>
+      <a href="users.html" class="nav-item" data-page="users.html" onclick="closeSidebar()"><span class="nav-icon">👥</span> Users</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar" id="sidebar-user-avatar">?</div>
+        <div>
+          <div class="user-name" id="sidebar-user-name">Loading…</div>
+          <div class="user-email" id="sidebar-user-email"></div>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="doLogout()">
+        <span style="font-size:15px">→</span> Sign out
+      </button>
+    </div>
+  </aside>
+
+  <div class="topbar">
+    <button class="hamburger-btn" id="hamburger-btn" onclick="toggleSidebar()" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="brand">CRM<span>Freelancing</span></div>
+  </div>
+
+  <main class="main">
+    <div class="page-topbar">
+      <div class="page-topbar-left"><h1>Payments</h1><p>Track transactions and auto-split distributions</p></div>
+      <div class="page-topbar-right">
+        <button class="btn btn-ghost btn-sm" onclick="downloadPDF()">⬇ PDF</button>
+        <button class="btn btn-primary" onclick="openModal()">+ Add Payment</button>
+      </div>
+    </div>
+
+    <div class="page-content">
+      <!-- SUMMARY CARDS -->
+      <div class="stats-grid" style="margin-bottom:20px">
+        <div class="stat-card">
+          <div class="glow" style="background:#10B981"></div>
+          <div class="stat-label">Total Collected</div>
+          <div class="stat-value c-green" id="sum-total">—</div>
+          <div class="stat-sub">All time</div>
+        </div>
+        <div class="stat-card">
+          <div class="glow" style="background:#3D8EFF"></div>
+          <div class="stat-label">Transactions</div>
+          <div class="stat-value c-navy" id="sum-count">—</div>
+          <div class="stat-sub">Total payments</div>
+        </div>
+        <div class="stat-card">
+          <div class="glow" style="background:#F59E0B"></div>
+          <div class="stat-label">Your Share</div>
+          <div class="stat-value c-amber" id="sum-share">—</div>
+          <div class="stat-sub">Based on user split</div>
+        </div>
+        <div class="stat-card">
+          <div class="glow" style="background:#EC4899"></div>
+          <div class="stat-label">This Month</div>
+          <div class="stat-value c-pink" id="sum-month">—</div>
+          <div class="stat-sub">Current month</div>
+        </div>
+      </div>
+
+      <!-- FILTERS -->
+      <div class="filter-row">
+        <select id="filter-client" onchange="filterPayments()"><option value="">All Clients</option></select>
+        <select id="filter-project" onchange="filterPayments()"><option value="">All Projects</option></select>
+        <input type="date" id="filter-from" onchange="filterPayments()" title="From date" />
+        <input type="date" id="filter-to"   onchange="filterPayments()" title="To date" />
+        <button class="btn btn-ghost btn-sm" onclick="clearFilters()">Clear</button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Client</th><th>Project</th><th>Amount</th><th>Split/User</th><th>Note</th><th>Proof</th><th>Date</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="payments-tbody">
+            <tr><td colspan="8"><div class="empty"><div class="empty-icon">💰</div><p>Loading payments…</p></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ADD PAYMENT MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modal-title">Add Payment</h2>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="field span2">
+          <label>Client *</label>
+          <select id="f-client" required onchange="loadProjectsForClient()"><option value="">Select client…</option></select>
+        </div>
+        <div class="field span2">
+          <label>Project <span style="font-weight:400;text-transform:none;color:var(--text-light)">(optional)</span></label>
+          <select id="f-project"><option value="">Select project…</option></select>
+        </div>
+        <div class="field">
+          <label>Amount (₹) *</label>
+          <input type="number" id="f-amount" required min="1" placeholder="0" oninput="previewSplit()" />
+        </div>
+        <div class="field">
+          <label>Received Date</label>
+          <input type="date" id="f-date" />
+        </div>
+        <div class="field span2">
+          <label>Note</label>
+          <input type="text" id="f-note" placeholder="e.g. Advance payment for Q3" />
+        </div>
+        <div class="field span2">
+          <label>Payment Proof <span style="font-weight:400;text-transform:none;color:var(--text-light)">(optional)</span></label>
+          <input type="file" id="f-proof" accept="image/*,.pdf" />
+        </div>
+      </div>
+      <div class="alert alert-info" id="split-preview" style="margin-top:12px">
+        💡 Amount will be automatically split equally among all users.
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" id="submit-btn" onclick="submitPayment()">Save Payment</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT PAYMENT MODAL -->
+<div class="modal-overlay" id="edit-modal" onclick="if(event.target===this)closeEditModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Edit Payment</h2>
+      <button class="modal-close" onclick="closeEditModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="field">
+          <label>Amount (₹) *</label>
+          <input type="number" id="ef-amount" required min="1" placeholder="0" />
+        </div>
+        <div class="field">
+          <label>Received Date</label>
+          <input type="date" id="ef-date" />
+        </div>
+        <div class="field span2">
+          <label>Note</label>
+          <input type="text" id="ef-note" placeholder="Note…" />
+        </div>
+      </div>
+      <div class="alert alert-warn" style="margin-top:12px">
+        ⚠️ Editing amount will recalculate and update all user distributions.
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeEditModal()">Cancel</button>
+      <button class="btn btn-primary" id="edit-submit-btn" onclick="submitEdit()">Update Payment</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase.js"></script>
+<script>
+/* ── SIDEBAR ── */
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.contains('open') ? closeSidebar() : openSidebar();
+}
+function openSidebar() {
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('sidebar-overlay').classList.add('active');
+  document.getElementById('hamburger-btn').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('active');
+  const btn = document.getElementById('hamburger-btn');
+  if (btn) btn.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+let allPayments  = [];
+let allClients   = [];
+let allProjects  = [];
+let userCount    = 1;
+let editingPayId = null;
+
+(async () => {
+  await requireAuth();
+  await loadSidebarUser();
+  setActiveNav();
+  await Promise.all([loadClients(), loadPayments(), loadUserCount()]);
+})();
+
+async function loadUserCount() {
+  const { count } = await sb.from('users').select('*', { count: 'exact', head: true });
+  userCount = count || 1;
+}
+
+async function loadClients() {
+  const { data } = await sb.from('clients').select('id, company_name').order('company_name');
+  allClients = data || [];
+  const opts = allClients.map(c => `<option value="${c.id}">${c.company_name}</option>`).join('');
+  document.getElementById('filter-client').innerHTML = '<option value="">All Clients</option>' + opts;
+  document.getElementById('f-client').innerHTML      = '<option value="">Select client…</option>' + opts;
+}
+
+async function loadProjectsForClient() {
+  const clientId = document.getElementById('f-client').value;
+  const sel = document.getElementById('f-project');
+  if (!clientId) { sel.innerHTML = '<option value="">Select project…</option>'; return; }
+  const { data } = await sb.from('projects').select('id, title').eq('client_id', clientId).order('title');
+  sel.innerHTML = '<option value="">Select project…</option>' + (data||[]).map(p => `<option value="${p.id}">${p.title}</option>`).join('');
+}
+
+async function loadPayments() {
+  const { data, error } = await sb.from('payments')
+    .select('*, clients(company_name), projects(title)')
+    .order('received_at', { ascending: false });
+  const tbody = document.getElementById('payments-tbody');
+  if (error) { tbody.innerHTML = `<tr><td colspan="8"><div class="empty"><div class="empty-icon">⚠️</div><p>${error.message}</p></div></td></tr>`; return; }
+  allPayments = data || [];
+
+  const { data: projs } = await sb.from('projects').select('id, title').order('title');
+  allProjects = projs || [];
+  document.getElementById('filter-project').innerHTML = '<option value="">All Projects</option>' + allProjects.map(p => `<option value="${p.id}">${p.title}</option>`).join('');
+
+  renderPayments(allPayments);
+  updateSummary(allPayments);
+}
+
+function renderPayments(list) {
+  const tbody = document.getElementById('payments-tbody');
+  if (!list.length) {
+    tbody.innerHTML = `<tr><td colspan="8"><div class="empty"><div class="empty-icon">💰</div><p>No payments yet.</p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = list.map(p => `
+    <tr>
+      <td><strong>${p.clients?.company_name||'—'}</strong></td>
+      <td style="color:var(--text-muted)">${p.projects?.title||'—'}</td>
+      <td class="amount-cell">₹${Number(p.amount).toLocaleString('en-IN')}</td>
+      <td>
+        <span style="font-size:13px;color:var(--amber);font-weight:600">₹${p.split_amount?Number(p.split_amount).toLocaleString('en-IN'):'—'}</span>
+        ${p.user_count?`<div class="split-info">÷ ${p.user_count} users</div>`:''}
+      </td>
+      <td style="color:var(--text-muted)">${p.note||'—'}</td>
+      <td>${p.proof_url
+        ? `<div style="display:flex;gap:5px;flex-wrap:wrap">
+             <a href="${p.proof_url}" target="_blank" class="btn btn-ghost btn-xs">👁 View</a>
+             <a href="${p.proof_url}" download class="btn btn-primary btn-xs">⬇ Save</a>
+           </div>`
+        : '<span style="color:var(--text-light);font-size:12px">No proof</span>'}</td>
+      <td style="color:var(--text-muted);font-size:12px">${p.received_at?new Date(p.received_at).toLocaleDateString('en-IN'):'—'}</td>
+      <td>
+        <div style="display:flex;gap:5px">
+          <button class="btn btn-warning btn-xs" onclick="openEditModal('${p.id}')">Edit</button>
+          <button class="btn btn-danger btn-xs" onclick="deletePayment('${p.id}')">Delete</button>
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+function updateSummary(list) {
+  const total = list.reduce((s,p) => s+(p.amount||0), 0);
+  document.getElementById('sum-total').textContent = '₹' + total.toLocaleString('en-IN');
+  document.getElementById('sum-count').textContent = list.length;
+  document.getElementById('sum-share').textContent = '₹' + Math.round(total / userCount).toLocaleString('en-IN');
+  const now = new Date();
+  const monthTotal = list.filter(p => {
+    if (!p.received_at) return false;
+    const d = new Date(p.received_at);
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  }).reduce((s,p) => s+(p.amount||0), 0);
+  document.getElementById('sum-month').textContent = '₹' + monthTotal.toLocaleString('en-IN');
+}
+
+function filterPayments() {
+  const cId  = document.getElementById('filter-client').value;
+  const pId  = document.getElementById('filter-project').value;
+  const from = document.getElementById('filter-from').value;
+  const to   = document.getElementById('filter-to').value;
+  const filtered = allPayments.filter(p => {
+    const d = p.received_at ? new Date(p.received_at) : null;
+    return (!cId  || p.client_id  === cId) &&
+           (!pId  || p.project_id === pId) &&
+           (!from || (d && d >= new Date(from))) &&
+           (!to   || (d && d <= new Date(to + 'T23:59:59')));
+  });
+  renderPayments(filtered);
+  updateSummary(filtered);
+}
+
+function clearFilters() {
+  ['filter-client','filter-project','filter-from','filter-to'].forEach(id => document.getElementById(id).value = '');
+  renderPayments(allPayments);
+  updateSummary(allPayments);
+}
+
+async function previewSplit() {
+  const amt = parseFloat(document.getElementById('f-amount').value) || 0;
+  const split = amt / userCount;
+  document.getElementById('split-preview').textContent =
+    `💡 ₹${amt.toLocaleString('en-IN')} ÷ ${userCount} users = ₹${split.toFixed(2)} per user`;
+}
+
+function openModal() {
+  document.getElementById('modal-title').textContent = 'Add Payment';
+  document.getElementById('f-client').value  = '';
+  document.getElementById('f-project').innerHTML = '<option value="">Select project…</option>';
+  document.getElementById('f-amount').value  = '';
+  document.getElementById('f-note').value    = '';
+  document.getElementById('f-date').value    = new Date().toISOString().split('T')[0];
+  document.getElementById('split-preview').textContent = `💡 Amount will be automatically split equally among ${userCount} users.`;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
+
+async function submitPayment() {
+  const clientId = document.getElementById('f-client').value;
+  const amount   = parseFloat(document.getElementById('f-amount').value);
+  if (!clientId) { showToast('Please select a client.', 'error'); return; }
+  if (!amount || amount <= 0) { showToast('Enter a valid amount.', 'error'); return; }
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+
+  const projectId = document.getElementById('f-project').value || null;
+  const note      = document.getElementById('f-note').value.trim() || null;
+  const dateVal   = document.getElementById('f-date').value;
+  const file      = document.getElementById('f-proof').files[0];
+  const splitAmt  = amount / userCount;
+
+  let proofUrl = null;
+  if (file) {
+    try {
+      const ext  = file.name.split('.').pop();
+      const path = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;
+      const { error: upErr } = await sb.storage.from('proofs').upload(path, file, { upsert: true });
+      if (!upErr) {
+        const { data: urlData } = sb.storage.from('proofs').getPublicUrl(path);
+        proofUrl = urlData.publicUrl;
+      } else {
+        showToast('Proof upload skipped: ' + upErr.message, 'info');
+      }
+    } catch(e) { showToast('Proof upload skipped.', 'info'); }
+  }
+
+  const { data: payData, error: payErr } = await sb.from('payments').insert([{
+    client_id:    clientId,
+    project_id:   projectId,
+    amount,
+    note,
+    proof_url:    proofUrl,
+    received_at:  dateVal || new Date().toISOString(),
+    split_amount: splitAmt,
+    user_count:   userCount,
+  }]).select().single();
+
+  if (payErr) { showToast('Error: ' + payErr.message, 'error'); btn.disabled = false; btn.textContent = 'Save Payment'; return; }
+
+  const { data: users } = await sb.from('users').select('id');
+  if (users?.length) {
+    await sb.from('distributions').insert(users.map(u => ({ payment_id: payData.id, user_id: u.id, amount: splitAmt })));
+  }
+
+  if (projectId) {
+    const { data: proj } = await sb.from('projects').select('paid_amount').eq('id', projectId).single();
+    const newPaid = (proj?.paid_amount || 0) + amount;
+    await sb.from('projects').update({ paid_amount: newPaid }).eq('id', projectId);
+  }
+
+  showToast('Payment saved and split distributed!', 'success');
+  closeModal();
+  btn.disabled = false; btn.textContent = 'Save Payment';
+  await loadPayments();
+}
+
+/* ── EDIT ── */
+function openEditModal(id) {
+  const p = allPayments.find(x => x.id === id);
+  if (!p) return;
+  editingPayId = id;
+  document.getElementById('ef-amount').value = p.amount || '';
+  document.getElementById('ef-note').value   = p.note || '';
+  document.getElementById('ef-date').value   = p.received_at ? p.received_at.split('T')[0] : '';
+  document.getElementById('edit-modal').classList.add('open');
+}
+function closeEditModal() { document.getElementById('edit-modal').classList.remove('open'); editingPayId = null; }
+
+async function submitEdit() {
+  const amount = parseFloat(document.getElementById('ef-amount').value);
+  if (!amount || amount <= 0) { showToast('Enter a valid amount.', 'error'); return; }
+  const btn = document.getElementById('edit-submit-btn');
+  btn.disabled = true; btn.textContent = 'Updating…';
+
+  const oldPay   = allPayments.find(x => x.id === editingPayId);
+  const splitAmt = amount / userCount;
+
+  const { error } = await sb.from('payments').update({
+    amount,
+    note:         document.getElementById('ef-note').value.trim() || null,
+    received_at:  document.getElementById('ef-date').value || oldPay?.received_at,
+    split_amount: splitAmt,
+    user_count:   userCount,
+  }).eq('id', editingPayId);
+
+  if (error) { showToast('Error: ' + error.message, 'error'); btn.disabled = false; btn.textContent = 'Update Payment'; return; }
+
+  await sb.from('distributions').delete().eq('payment_id', editingPayId);
+  const { data: users } = await sb.from('users').select('id');
+  if (users?.length) {
+    await sb.from('distributions').insert(users.map(u => ({ payment_id: editingPayId, user_id: u.id, amount: splitAmt })));
+  }
+
+  if (oldPay?.project_id) {
+    const diff = amount - (oldPay.amount || 0);
+    const { data: proj } = await sb.from('projects').select('paid_amount').eq('id', oldPay.project_id).single();
+    const newPaid = Math.max(0, (proj?.paid_amount || 0) + diff);
+    await sb.from('projects').update({ paid_amount: newPaid }).eq('id', oldPay.project_id);
+  }
+
+  showToast('Payment updated!', 'success');
+  closeEditModal();
+  btn.disabled = false; btn.textContent = 'Update Payment';
+  await loadPayments();
+}
+
+async function deletePayment(id) {
+  if (!confirm('Delete this payment? Distributions will also be removed.')) return;
+  const pay = allPayments.find(x => x.id === id);
+
+  if (pay?.project_id) {
+    const { data: proj } = await sb.from('projects').select('paid_amount').eq('id', pay.project_id).single();
+    const newPaid = Math.max(0, (proj?.paid_amount || 0) - (pay.amount || 0));
+    await sb.from('projects').update({ paid_amount: newPaid }).eq('id', pay.project_id);
+  }
+
+  await sb.from('distributions').delete().eq('payment_id', id);
+  const { error } = await sb.from('payments').delete().eq('id', id);
+  if (error) { showToast('Delete failed: ' + error.message, 'error'); return; }
+  showToast('Payment deleted.', 'info');
+  await loadPayments();
+}
+
+/* ── PDF ── */
+function downloadPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  doc.setFillColor(13, 27, 62);
+  doc.rect(0, 0, 210, 24, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(14); doc.setFont('helvetica', 'bold');
+  doc.text('Payment History - CRM Freelancing', 14, 10);
+  doc.setFontSize(9); doc.setFont('helvetica', 'normal');
+  doc.text('Generated: ' + new Date().toLocaleString('en-IN'), 14, 18);
+
+  const visible = getFilteredPayments();
+  const fmt = n => 'Rs.' + Number(n).toLocaleString('en-IN');
+  const total = visible.reduce((s, p) => s + (p.amount || 0), 0);
+
+  doc.autoTable({
+    startY: 28,
+    head: [['Client', 'Project', 'Amount', 'Split/User', 'Note', 'Date']],
+    body: visible.map(p => [
+      p.clients?.company_name || '—',
+      p.projects?.title || '—',
+      fmt(p.amount),
+      p.split_amount ? fmt(p.split_amount) : '—',
+      p.note || '—',
+      p.received_at ? new Date(p.received_at).toLocaleDateString('en-IN') : '—',
+    ]),
+    foot: [['TOTAL', '', fmt(total), '', '', '']],
+    styles: { fontSize: 9, font: 'helvetica' },
+    headStyles: { fillColor: [13, 27, 62], textColor: [255, 255, 255], fontStyle: 'bold' },
+    footStyles: { fillColor: [16, 185, 129], textColor: [255, 255, 255], fontStyle: 'bold' },
+    alternateRowStyles: { fillColor: [245, 247, 250] },
+  });
+
+  doc.save('CRMFreelancing_Payments.pdf');
+}
+
+function getFilteredPayments() {
+  const cId  = document.getElementById('filter-client').value;
+  const pId  = document.getElementById('filter-project').value;
+  const from = document.getElementById('filter-from').value;
+  const to   = document.getElementById('filter-to').value;
+  return allPayments.filter(p => {
+    const d = p.received_at ? new Date(p.received_at) : null;
+    return (!cId  || p.client_id  === cId) &&
+           (!pId  || p.project_id === pId) &&
+           (!from || (d && d >= new Date(from))) &&
+           (!to   || (d && d <= new Date(to + 'T23:59:59')));
+  });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CRM Freelancing — Users</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .user-row-avatar { width:36px;height:36px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;margin-right:10px; }
+    .td-user { display:flex;align-items:center; }
+    .role-badge { display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11.5px;font-weight:600; }
+    .role-admin  { background:#DBEAFE;color:#1D4ED8; }
+    .role-member { background:#F1F5F9;color:#64748B; }
+    .pass-wrap { position:relative; }
+    .pass-wrap input { padding-right:40px; }
+    .pass-toggle { position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:14px;padding:0 4px; }
+
+    /* ── MOBILE TOPBAR ── */
+    .topbar {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 56px;
+      background: #0D1B3E;
+      z-index: 150;
+      align-items: center;
+      padding: 0 16px;
+      gap: 12px;
+    }
+    .topbar .brand { font-size: 18px; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
+    .topbar .brand span { color: #3D8EFF; }
+
+    @media (max-width: 768px) {
+      .topbar { display: flex; }
+      .main { padding-top: 56px !important; }
+      .app-shell { display: block !important; }
+      .sidebar {
+        position: fixed !important;
+        top: 0; left: -280px;
+        width: 260px; height: 100vh;
+        z-index: 300;
+        transition: left 0.3s cubic-bezier(0.4,0,0.2,1);
+        overflow-y: auto;
+        box-shadow: 4px 0 24px rgba(0,0,0,0.3);
+      }
+      .sidebar.open { left: 0 !important; }
+    }
+
+    /* ── HAMBURGER ── */
+    .hamburger-btn {
+      background: none; border: none; cursor: pointer;
+      padding: 6px; display: flex; flex-direction: column;
+      gap: 5px; flex-shrink: 0;
+    }
+    .hamburger-btn span {
+      display: block; width: 22px; height: 2px;
+      background: #fff; border-radius: 2px;
+      transition: all 0.3s ease;
+    }
+    .hamburger-btn.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .hamburger-btn.open span:nth-child(2) { opacity: 0; }
+    .hamburger-btn.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    /* ── OVERLAY ── */
+    .sidebar-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5); z-index: 200;
+      backdrop-filter: blur(2px);
+    }
+    .sidebar-overlay.active { display: block; }
+
+    /* ── SIDEBAR CLOSE ── */
+    .sidebar-close {
+      display: none; position: absolute; top: 14px; right: 14px;
+      width: 30px; height: 30px; border-radius: 50%;
+      background: rgba(255,255,255,0.12); border: none;
+      color: #fff; font-size: 16px; cursor: pointer;
+      align-items: center; justify-content: center;
+      transition: background 0.2s;
+    }
+    .sidebar-close:hover { background: rgba(255,255,255,0.25); }
+    @media (max-width: 768px) { .sidebar-close { display: flex; } }
+
+    /* ── NAV ITEMS ── */
+    .nav-item { font-size: 15px !important; color: #ffffff !important; opacity: 0.82; transition: opacity 0.15s, background 0.15s; }
+    .nav-item:hover { opacity: 1; }
+    .nav-item.active { opacity: 1; color: #ffffff !important; }
+    .nav-label { font-size: 11px !important; color: rgba(255,255,255,0.4) !important; letter-spacing: 0.1em; }
+
+    /* ── SIDEBAR FOOTER ── */
+    .sidebar-footer { padding: 14px 16px 18px; border-top: 1px solid rgba(255,255,255,0.1); }
+    .user-info { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .user-avatar {
+      width: 38px; height: 38px; border-radius: 50%;
+      background: linear-gradient(135deg, #3D8EFF, #1D4ED8);
+      color: #fff; font-weight: 700; font-size: 14px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; box-shadow: 0 0 0 2px rgba(255,255,255,0.2);
+    }
+    .user-name { font-size: 13.5px; font-weight: 600; color: #ffffff; line-height: 1.2; }
+    .user-email { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 1px; }
+    .btn-logout {
+      width: 100%; display: flex; align-items: center; justify-content: center;
+      gap: 8px; padding: 9px 14px; border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.07);
+      color: rgba(255,255,255,0.75);
+      font-family: var(--font, 'Outfit', sans-serif);
+      font-size: 13px; font-weight: 500; cursor: pointer;
+      transition: background 0.2s, color 0.2s, border-color 0.2s;
+    }
+    .btn-logout:hover { background: rgba(239,68,68,0.18); border-color: rgba(239,68,68,0.4); color: #FCA5A5; }
+  </style>
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar">
+    <button class="sidebar-close" onclick="closeSidebar()">✕</button>
+    <div class="sidebar-brand">
+      <div class="brand-name">CRM<span>Freelancing</span></div>
+      <div class="brand-sub">Fleet Management</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-label">Main</div>
+      <a href="dashboard.html" class="nav-item" data-page="dashboard.html" onclick="closeSidebar()"><span class="nav-icon">⬛</span> Dashboard</a>
+      <a href="clients.html"   class="nav-item" data-page="clients.html" onclick="closeSidebar()"><span class="nav-icon">🏢</span> Clients</a>
+      <a href="projects.html"  class="nav-item" data-page="projects.html" onclick="closeSidebar()"><span class="nav-icon">📁</span> Projects</a>
+      <a href="payments.html"  class="nav-item" data-page="payments.html" onclick="closeSidebar()"><span class="nav-icon">💰</span> Payments</a>
+      <div class="nav-label">Settings</div>
+      <a href="users.html" class="nav-item active" data-page="users.html" onclick="closeSidebar()"><span class="nav-icon">👥</span> Users</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar" id="sidebar-user-avatar">?</div>
+        <div>
+          <div class="user-name" id="sidebar-user-name">Loading…</div>
+          <div class="user-email" id="sidebar-user-email"></div>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="doLogout()">
+        <span style="font-size:15px">→</span> Sign out
+      </button>
+    </div>
+  </aside>
+
+  <div class="topbar">
+    <button class="hamburger-btn" id="hamburger-btn" onclick="toggleSidebar()" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="brand">CRM<span>Freelancing</span></div>
+  </div>
+
+  <main class="main">
+    <div class="page-topbar">
+      <div class="page-topbar-left"><h1>Users</h1><p>Manage team members — all users have full access</p></div>
+      <div class="page-topbar-right">
+        <button class="btn btn-primary" onclick="openAddModal()">+ Add User</button>
+      </div>
+    </div>
+
+    <div class="page-content">
+      <div class="stats-grid" style="margin-bottom:20px">
+        <div class="stat-card">
+          <div class="glow" style="background:#3D8EFF"></div>
+          <div class="stat-label">Total Users</div>
+          <div class="stat-value c-navy" id="stat-users">—</div>
+          <div class="stat-sub">Team members</div>
+        </div>
+        <div class="stat-card">
+          <div class="glow" style="background:#10B981"></div>
+          <div class="stat-label">Payment Split</div>
+          <div class="stat-value c-green" id="stat-split">—</div>
+          <div class="stat-sub">Per user share</div>
+        </div>
+        <div class="stat-card">
+          <div class="glow" style="background:#F59E0B"></div>
+          <div class="stat-label">Admins</div>
+          <div class="stat-value c-amber" id="stat-admins">—</div>
+          <div class="stat-sub">Admin role users</div>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Name</th><th>Email</th><th>Role</th><th>Access</th><th>Joined</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="users-tbody">
+            <tr><td colspan="6"><div class="empty"><div class="empty-icon">👥</div><p>Loading users…</p></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ADD USER MODAL -->
+<div class="modal-overlay" id="add-modal" onclick="if(event.target===this)closeAddModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Add New User</h2>
+      <button class="modal-close" onclick="closeAddModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="field span2">
+          <label>Full Name *</label>
+          <input type="text" id="f-name" placeholder="e.g. Ravi Kumar" />
+        </div>
+        <div class="field span2">
+          <label>Email Address *</label>
+          <input type="email" id="f-email" placeholder="ravi@company.com" />
+        </div>
+        <div class="field span2">
+          <label>Password *</label>
+          <div class="pass-wrap">
+            <input type="password" id="f-pass" placeholder="Min 6 characters" />
+            <button type="button" class="pass-toggle" onclick="togglePass('f-pass')">👁</button>
+          </div>
+        </div>
+        <div class="field span2">
+          <label>Role</label>
+          <select id="f-role">
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+      </div>
+      <div class="alert alert-success" style="margin-top:14px">
+        ✅ All users have full access to all modules — Clients, Projects, Payments and Users.
+      </div>
+      <div class="alert alert-warn" style="margin-top:10px">
+        ⚠️ User will be created in Supabase Auth. Share credentials with them directly.
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeAddModal()">Cancel</button>
+      <button class="btn btn-primary" id="add-submit-btn" onclick="submitAddUser()">Create User</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT USER MODAL -->
+<div class="modal-overlay" id="edit-modal" onclick="if(event.target===this)closeEditModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Edit User</h2>
+      <button class="modal-close" onclick="closeEditModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="field span2">
+          <label>Full Name *</label>
+          <input type="text" id="ef-name" placeholder="Full name" />
+        </div>
+        <div class="field span2">
+          <label>Role</label>
+          <select id="ef-role">
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeEditModal()">Cancel</button>
+      <button class="btn btn-primary" id="edit-submit-btn" onclick="submitEditUser()">Update User</button>
+    </div>
+  </div>
+</div>
+
+<!-- VIEW USER MODAL -->
+<div class="modal-overlay" id="view-modal" onclick="if(event.target===this)closeViewModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="view-user-title">User Details</h2>
+      <button class="modal-close" onclick="closeViewModal()">✕</button>
+    </div>
+    <div class="modal-body" id="view-user-body"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeViewModal()">Close</button>
+      <button class="btn btn-warning btn-sm" id="view-edit-btn">Edit</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase.js"></script>
+<script>
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.contains('open') ? closeSidebar() : openSidebar();
+}
+function openSidebar() {
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('sidebar-overlay').classList.add('active');
+  document.getElementById('hamburger-btn').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('active');
+  const btn = document.getElementById('hamburger-btn');
+  if (btn) btn.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+let allUsers   = [];
+let editingUID = null;
+
+(async () => {
+  await requireAuth();
+  await loadSidebarUser();
+  setActiveNav();
+  await loadUsers();
+  await loadPaymentSplit();
+})();
+
+async function loadUsers() {
+  const { data, error } = await sb.from('users').select('*').order('created_at', { ascending: false });
+  const tbody = document.getElementById('users-tbody');
+  if (error) {
+    tbody.innerHTML = `<tr><td colspan="6"><div class="empty"><div class="empty-icon">⚠️</div><p>${error.message}</p></div></td></tr>`;
+    return;
+  }
+  allUsers = data || [];
+  document.getElementById('stat-users').textContent  = allUsers.length;
+  document.getElementById('stat-admins').textContent = allUsers.filter(u => u.role === 'admin').length;
+  renderUsers(allUsers);
+}
+
+function renderUsers(list) {
+  const tbody = document.getElementById('users-tbody');
+  if (!list.length) {
+    tbody.innerHTML = `<tr><td colspan="6"><div class="empty"><div class="empty-icon">👥</div><p>No users yet. Click <strong>+ Add User</strong>.</p></div></td></tr>`;
+    return;
+  }
+  const colors = ['av-navy','av-green','av-amber','av-pink'];
+  tbody.innerHTML = list.map((u, i) => {
+    const ini = (u.name||u.email||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+    return `<tr>
+      <td><div class="td-user"><div class="user-row-avatar avatar ${colors[i%colors.length]}">${ini}</div><strong>${u.name||'—'}</strong></div></td>
+      <td style="color:var(--text-muted)">${u.email||'—'}</td>
+      <td><span class="role-badge role-${u.role||'member'}">${u.role||'member'}</span></td>
+      <td><span style="background:#DCFCE7;color:#16A34A;padding:3px 10px;border-radius:20px;font-size:11.5px;font-weight:600">Full Access</span></td>
+      <td style="color:var(--text-muted);font-size:12px">${u.created_at?new Date(u.created_at).toLocaleDateString('en-IN'):'—'}</td>
+      <td>
+        <div style="display:flex;gap:5px">
+          <button class="btn btn-ghost btn-xs" onclick="viewUser('${u.id}')">View</button>
+          <button class="btn btn-warning btn-xs" onclick="openEditModal('${u.id}')">Edit</button>
+          <button class="btn btn-danger btn-xs" onclick="deleteUser('${u.id}')">Remove</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+async function loadPaymentSplit() {
+  const { data } = await sb.from('payments').select('amount');
+  const total = (data||[]).reduce((s,p) => s+(p.amount||0), 0);
+  const count = allUsers.length || 1;
+  document.getElementById('stat-split').textContent = 'Rs.' + Math.round(total/count).toLocaleString('en-IN');
+}
+
+/* ── ADD USER ── */
+function openAddModal() {
+  document.getElementById('f-name').value  = '';
+  document.getElementById('f-email').value = '';
+  document.getElementById('f-pass').value  = '';
+  document.getElementById('f-role').value  = 'member';
+  document.getElementById('add-modal').classList.add('open');
+}
+function closeAddModal() { document.getElementById('add-modal').classList.remove('open'); }
+
+function togglePass(id) {
+  const inp = document.getElementById(id);
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+
+async function submitAddUser() {
+  const name  = document.getElementById('f-name').value.trim();
+  const email = document.getElementById('f-email').value.trim();
+  const pass  = document.getElementById('f-pass').value;
+  const role  = document.getElementById('f-role').value;
+
+  if (!name)  { showToast('Name is required.', 'error'); return; }
+  if (!email) { showToast('Email is required.', 'error'); return; }
+  if (!email.includes('@') || !email.includes('.')) { showToast('Enter a valid email address.', 'error'); return; }
+  if (pass.length < 6) { showToast('Password must be at least 6 characters.', 'error'); return; }
+
+  const btn = document.getElementById('add-submit-btn');
+  btn.disabled = true; btn.textContent = 'Creating…';
+
+  let authId = null;
+  const { data: authData, error: authErr } = await sb.auth.signUp({
+    email, password: pass,
+    options: { data: { name, role }, emailRedirectTo: null }
+  });
+
+  if (authErr) {
+    if (authErr.message.toLowerCase().includes('rate limit') || authErr.message.toLowerCase().includes('email')) {
+      showToast('Auth rate limit — user saved to roster. Disable email confirmation in Supabase Auth settings.', 'info');
+    } else {
+      showToast('Auth error: ' + authErr.message, 'error');
+      btn.disabled = false; btn.textContent = 'Create User'; return;
+    }
+  } else {
+    authId = authData?.user?.id || null;
+  }
+
+  const { error: dbErr } = await sb.from('users').insert([{ name, email, role, auth_id: authId }]);
+  if (dbErr) {
+    showToast('DB error: ' + dbErr.message, 'error');
+    btn.disabled = false; btn.textContent = 'Create User'; return;
+  }
+
+  if (!authErr) showToast(`User "${name}" created!`, 'success');
+  closeAddModal();
+  btn.disabled = false; btn.textContent = 'Create User';
+  await loadUsers();
+  await loadPaymentSplit();
+}
+
+/* ── EDIT USER ── */
+function openEditModal(id) {
+  const u = allUsers.find(x => x.id === id);
+  if (!u) return;
+  editingUID = id;
+  document.getElementById('ef-name').value = u.name || '';
+  document.getElementById('ef-role').value = u.role || 'member';
+  document.getElementById('edit-modal').classList.add('open');
+}
+function closeEditModal() { document.getElementById('edit-modal').classList.remove('open'); editingUID = null; }
+
+async function submitEditUser() {
+  const name = document.getElementById('ef-name').value.trim();
+  const role = document.getElementById('ef-role').value;
+  if (!name) { showToast('Name is required.', 'error'); return; }
+
+  const btn = document.getElementById('edit-submit-btn');
+  btn.disabled = true; btn.textContent = 'Updating…';
+
+  const { error } = await sb.from('users').update({ name, role }).eq('id', editingUID);
+  if (error) { showToast('Error: ' + error.message, 'error'); btn.disabled = false; btn.textContent = 'Update User'; return; }
+
+  showToast('User updated!', 'success');
+  closeEditModal();
+  btn.disabled = false; btn.textContent = 'Update User';
+  await loadUsers();
+}
+
+/* ── VIEW USER ── */
+function viewUser(id) {
+  const u = allUsers.find(x => x.id === id);
+  if (!u) return;
+  document.getElementById('view-user-title').textContent = u.name || 'User Details';
+  document.getElementById('view-user-body').innerHTML = `
+    <div class="detail-row"><span class="detail-key">Name</span><span class="detail-val"><strong>${u.name||'—'}</strong></span></div>
+    <div class="detail-row"><span class="detail-key">Email</span><span class="detail-val">${u.email||'—'}</span></div>
+    <div class="detail-row"><span class="detail-key">Role</span><span class="detail-val"><span class="role-badge role-${u.role||'member'}">${u.role||'member'}</span></span></div>
+    <div class="detail-row"><span class="detail-key">Access</span><span class="detail-val"><span style="background:#DCFCE7;color:#16A34A;padding:3px 10px;border-radius:20px;font-size:11.5px;font-weight:600">Full Access — All Modules</span></span></div>
+    <div class="detail-row"><span class="detail-key">Joined</span><span class="detail-val" style="color:var(--text-muted)">${u.created_at?new Date(u.created_at).toLocaleString('en-IN'):'—'}</span></div>
+  `;
+  document.getElementById('view-edit-btn').onclick = () => { closeViewModal(); openEditModal(id); };
+  document.getElementById('view-modal').classList.add('open');
+}
+function closeViewModal() { document.getElementById('view-modal').classList.remove('open'); }
+
+/* ── DELETE USER ── */
+async function deleteUser(id) {
+  if (!confirm('Remove this user? They will lose access to the system.')) return;
+  const { error } = await sb.from('users').delete().eq('id', id);
+  if (error) { showToast('Delete failed: ' + error.message, 'error'); return; }
+  showToast('User removed.', 'info');
+  await loadUsers();
+  await loadPaymentSplit();
+}
+</script>
+</body>
+</html>

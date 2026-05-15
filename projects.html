@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CRM Freelancing — Projects</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .back-btn { display:inline-flex;align-items:center;gap:6px;color:var(--text-muted);font-size:13px;cursor:pointer;background:none;border:none;font-family:var(--font);padding:0;margin-bottom:16px;transition:color 0.15s; }
+    .back-btn:hover { color:var(--navy-accent); }
+    .detail-header { display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:20px; }
+    .detail-header-left h2 { font-size:20px;font-weight:700;margin-bottom:4px; }
+    .detail-header-left p { font-size:13px;color:var(--text-muted); }
+    .add-task-form { display:flex;gap:10px;flex-wrap:wrap;padding:14px 16px;background:#F8FAFC;border-top:1px solid var(--card-border); }
+    .add-task-form input,.add-task-form select { background:#fff;border:1.5px solid var(--card-border);border-radius:var(--r);padding:8px 12px;color:var(--text);font-family:var(--font);font-size:13px;outline:none;transition:border-color 0.2s; }
+    .add-task-form input:focus,.add-task-form select:focus { border-color:var(--navy-accent); }
+    .add-task-form input { flex:1;min-width:160px; }
+    .project-row { cursor:pointer; }
+    .project-row:hover td { background:#EFF6FF !important; }
+    .filter-row { display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px; }
+    .filter-row input,.filter-row select { background:#fff;border:1.5px solid var(--card-border);border-radius:var(--r);padding:8px 12px;color:var(--text);font-family:var(--font);font-size:13px;outline:none;transition:border-color 0.2s; }
+    .filter-row input:focus,.filter-row select:focus { border-color:var(--navy-accent); }
+    .filter-row input { flex:1;min-width:160px; }
+
+    /* ── MOBILE TOPBAR ── */
+    .topbar {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 56px;
+      background: #0D1B3E;
+      z-index: 150;
+      align-items: center;
+      padding: 0 16px;
+      gap: 12px;
+    }
+    .topbar .brand { font-size: 18px; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
+    .topbar .brand span { color: #3D8EFF; }
+
+    @media (max-width: 768px) {
+      .topbar { display: flex; }
+      .main { padding-top: 56px !important; }
+      .app-shell { display: block !important; }
+      .sidebar {
+        position: fixed !important;
+        top: 0; left: -280px;
+        width: 260px; height: 100vh;
+        z-index: 300;
+        transition: left 0.3s cubic-bezier(0.4,0,0.2,1);
+        overflow-y: auto;
+        box-shadow: 4px 0 24px rgba(0,0,0,0.3);
+      }
+      .sidebar.open { left: 0 !important; }
+    }
+
+    /* ── HAMBURGER ── */
+    .hamburger-btn {
+      background: none; border: none; cursor: pointer;
+      padding: 6px; display: flex; flex-direction: column;
+      gap: 5px; flex-shrink: 0;
+    }
+    .hamburger-btn span {
+      display: block; width: 22px; height: 2px;
+      background: #fff; border-radius: 2px;
+      transition: all 0.3s ease;
+    }
+    .hamburger-btn.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .hamburger-btn.open span:nth-child(2) { opacity: 0; }
+    .hamburger-btn.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    /* ── OVERLAY ── */
+    .sidebar-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5); z-index: 200;
+      backdrop-filter: blur(2px);
+    }
+    .sidebar-overlay.active { display: block; }
+
+    /* ── SIDEBAR CLOSE ── */
+    .sidebar-close {
+      display: none; position: absolute; top: 14px; right: 14px;
+      width: 30px; height: 30px; border-radius: 50%;
+      background: rgba(255,255,255,0.12); border: none;
+      color: #fff; font-size: 16px; cursor: pointer;
+      align-items: center; justify-content: center;
+      transition: background 0.2s;
+    }
+    .sidebar-close:hover { background: rgba(255,255,255,0.25); }
+    @media (max-width: 768px) { .sidebar-close { display: flex; } }
+
+    /* ── NAV ITEMS ── */
+    .nav-item { font-size: 15px !important; color: #ffffff !important; opacity: 0.82; transition: opacity 0.15s, background 0.15s; }
+    .nav-item:hover { opacity: 1; }
+    .nav-item.active { opacity: 1; color: #ffffff !important; }
+    .nav-label { font-size: 11px !important; color: rgba(255,255,255,0.4) !important; letter-spacing: 0.1em; }
+
+    /* ── SIDEBAR FOOTER ── */
+    .sidebar-footer { padding: 14px 16px 18px; border-top: 1px solid rgba(255,255,255,0.1); }
+    .user-info { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .user-avatar {
+      width: 38px; height: 38px; border-radius: 50%;
+      background: linear-gradient(135deg, #3D8EFF, #1D4ED8);
+      color: #fff; font-weight: 700; font-size: 14px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; box-shadow: 0 0 0 2px rgba(255,255,255,0.2);
+    }
+    .user-name { font-size: 13.5px; font-weight: 600; color: #ffffff; line-height: 1.2; }
+    .user-email { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 1px; }
+    .btn-logout {
+      width: 100%; display: flex; align-items: center; justify-content: center;
+      gap: 8px; padding: 9px 14px; border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.07);
+      color: rgba(255,255,255,0.75);
+      font-family: var(--font, 'Outfit', sans-serif);
+      font-size: 13px; font-weight: 500; cursor: pointer;
+      transition: background 0.2s, color 0.2s, border-color 0.2s;
+    }
+    .btn-logout:hover { background: rgba(239,68,68,0.18); border-color: rgba(239,68,68,0.4); color: #FCA5A5; }
+  </style>
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar">
+    <button class="sidebar-close" onclick="closeSidebar()">✕</button>
+    <div class="sidebar-brand">
+      <div class="brand-name">CRM<span>Freelancing</span></div>
+      <div class="brand-sub">Your agency, fully in control</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-label">Main</div>
+      <a href="dashboard.html" class="nav-item" data-page="dashboard.html" onclick="closeSidebar()"><span class="nav-icon">⬛</span> Dashboard</a>
+      <a href="clients.html"   class="nav-item" data-page="clients.html" onclick="closeSidebar()"><span class="nav-icon">🏢</span> Clients</a>
+      <a href="projects.html"  class="nav-item active" data-page="projects.html" onclick="closeSidebar()"><span class="nav-icon">📁</span> Projects</a>
+      <a href="payments.html"  class="nav-item" data-page="payments.html" onclick="closeSidebar()"><span class="nav-icon">💰</span> Payments</a>
+      <div class="nav-label">Settings</div>
+      <a href="users.html" class="nav-item" data-page="users.html" onclick="closeSidebar()"><span class="nav-icon">👥</span> Users</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar" id="sidebar-user-avatar">?</div>
+        <div>
+          <div class="user-name" id="sidebar-user-name">Loading…</div>
+          <div class="user-email" id="sidebar-user-email"></div>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="doLogout()">
+        <span style="font-size:15px">→</span> Sign out
+      </button>
+    </div>
+  </aside>
+
+  <div class="topbar">
+    <button class="hamburger-btn" id="hamburger-btn" onclick="toggleSidebar()" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="brand">CRM<span>Freelancing</span></div>
+  </div>
+
+  <main class="main">
+    <div class="page-topbar">
+      <div class="page-topbar-left"><h1>Projects</h1><p>Track all projects and task progress</p></div>
+      <div class="page-topbar-right" id="topbar-actions">
+        <button class="btn btn-primary" onclick="openAddProject()">+ Add Project</button>
+      </div>
+    </div>
+
+    <div class="page-content">
+
+      <!-- LIST VIEW -->
+      <div id="list-view">
+        <div class="filter-row">
+          <input type="text" id="proj-search" placeholder="Search projects or clients…" oninput="filterProjects()" />
+          <select id="proj-filter-status" onchange="filterProjects()">
+            <option value="">All Status</option>
+            <option value="not started">Not Started</option>
+            <option value="ongoing">Ongoing</option>
+            <option value="on hold">On Hold</option>
+            <option value="paused">Paused</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Project</th><th>Client</th><th>Contract</th><th>Paid</th><th>Status</th><th>Progress</th><th>Actions</th></tr></thead>
+            <tbody id="projects-tbody">
+              <tr><td colspan="7"><div class="empty"><div class="empty-icon">📁</div><p>Loading projects…</p></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- DETAIL VIEW -->
+      <div id="detail-view" style="display:none">
+        <button class="back-btn" onclick="showList()">← Back to Projects</button>
+        <div class="detail-header">
+          <div class="detail-header-left">
+            <h2 id="detail-title">Project Title</h2>
+            <p id="detail-client-name">Client Name</p>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <span id="detail-badge" class="badge badge-amber">ongoing</span>
+            <button class="btn btn-warning btn-sm" onclick="editCurrentProject()">Edit Project</button>
+            <button class="btn btn-ghost btn-sm" onclick="downloadPDF()">⬇ PDF Report</button>
+          </div>
+        </div>
+
+        <!-- Progress card -->
+        <div class="card" style="margin-bottom:18px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+            <span style="font-size:13px;font-weight:700;color:var(--text)">Task Progress</span>
+            <span id="detail-pct" style="font-size:13px;font-weight:700;color:var(--navy-accent)">0%</span>
+          </div>
+          <div class="progress-bar" style="height:8px">
+            <div class="progress-fill" id="detail-progress-fill" style="width:0%"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:12px;color:var(--text-muted)">
+            <span id="detail-task-count">0 of 0 tasks completed</span>
+            <span id="detail-budget-info"></span>
+          </div>
+        </div>
+
+        <!-- Financial summary card -->
+        <div class="card" style="margin-bottom:18px;background:linear-gradient(135deg,#0D1B3E,#1A3A6B);border:none">
+          <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:14px">Financial Summary</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:16px">
+            <div>
+              <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:4px">Contract Value</div>
+              <div style="font-size:20px;font-weight:800;color:#fff" id="fin-contract">Rs.0</div>
+            </div>
+            <div>
+              <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:4px">Total Paid</div>
+              <div style="font-size:20px;font-weight:800;color:#34D399" id="fin-paid">Rs.0</div>
+            </div>
+            <div>
+              <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:4px">Remaining</div>
+              <div style="font-size:20px;font-weight:800;color:#FCD34D" id="fin-remaining">Rs.0</div>
+            </div>
+            <div>
+              <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:4px">Collected</div>
+              <div style="font-size:20px;font-weight:800;color:#60A5FA" id="fin-pct">0%</div>
+            </div>
+          </div>
+          <div style="margin-top:14px">
+            <div style="display:flex;justify-content:space-between;font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:5px">
+              <span>Payment collection progress</span>
+              <span id="fin-pct-label">0%</span>
+            </div>
+            <div style="background:rgba(255,255,255,0.15);border-radius:20px;height:6px;overflow:hidden">
+              <div id="fin-bar" style="height:100%;border-radius:20px;background:#34D399;transition:width 0.5s ease;width:0%"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tasks -->
+        <div class="section">
+          <div class="section-head"><h2>Tasks</h2></div>
+          <div class="table-wrap" style="overflow:visible">
+            <div id="tasks-list"></div>
+            <div class="add-task-form">
+              <input type="text" id="new-task-desc" placeholder="New task description…" />
+              <select id="new-task-user"><option value="">Assign to…</option></select>
+              <button class="btn btn-primary btn-sm" onclick="addTask()">+ Add Task</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- ADD / EDIT PROJECT MODAL -->
+<div class="modal-overlay" id="proj-modal" onclick="if(event.target===this)closeProjModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="proj-modal-title">Add New Project</h2>
+      <button class="modal-close" onclick="closeProjModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="field span2">
+          <label>Project Title *</label>
+          <input type="text" id="pf-title" required placeholder="e.g. Fleet Expansion Q3" />
+        </div>
+        <div class="field span2">
+          <label>Client *</label>
+          <select id="pf-client" required><option value="">Select client…</option></select>
+        </div>
+        <div class="field">
+          <label>Contract Value (Rs.) *</label>
+          <input type="number" id="pf-contract" placeholder="0" min="0" />
+        </div>
+        <div class="field">
+          <label>Status</label>
+          <select id="pf-status">
+            <option value="not started">Not Started</option>
+            <option value="ongoing">Ongoing</option>
+            <option value="on hold">On Hold</option>
+            <option value="paused">Paused</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Start Date</label>
+          <input type="date" id="pf-start" />
+        </div>
+        <div class="field">
+          <label>Due Date</label>
+          <input type="date" id="pf-due" />
+        </div>
+        <div class="field">
+          <label>Priority</label>
+          <select id="pf-priority">
+            <option value="low">Low</option>
+            <option value="medium" selected>Medium</option>
+            <option value="high">High</option>
+            <option value="urgent">Urgent</option>
+          </select>
+        </div>
+        <div class="field span2">
+          <label>Description</label>
+          <textarea id="pf-desc" placeholder="Project description…"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeProjModal()">Cancel</button>
+      <button class="btn btn-primary" id="proj-submit-btn" onclick="submitProject()">Save Project</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase.js"></script>
+<script>
+let allProjects    = [];
+let allUsers       = [];
+let currentProject = null;
+let currentTasks   = [];
+let editingProjId  = null;
+
+const STATUS_BADGE = {
+  'not started': 'badge-blue',
+  'ongoing':     'badge-amber',
+  'on hold':     'badge-purple',
+  'paused':      'badge-gray',
+  'completed':   'badge-green',
+  'cancelled':   'badge-red',
+};
+
+(async () => {
+  await requireAuth();
+  await loadSidebarUser();
+  setActiveNav();
+  await Promise.all([loadProjects(), loadUsers()]);
+})();
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.contains('open') ? closeSidebar() : openSidebar();
+}
+function openSidebar() {
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('sidebar-overlay').classList.add('active');
+  document.getElementById('hamburger-btn').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('active');
+  const btn = document.getElementById('hamburger-btn');
+  if (btn) btn.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+/* ── PROJECTS ── */
+async function loadProjects() {
+  const { data, error } = await sb.from('projects')
+    .select('*, clients(company_name)')
+    .order('created_at', { ascending: false });
+  const tbody = document.getElementById('projects-tbody');
+  if (error) { tbody.innerHTML = `<tr><td colspan="7"><div class="empty"><div class="empty-icon">⚠️</div><p>${error.message}</p></div></td></tr>`; return; }
+  allProjects = data || [];
+  renderProjects(allProjects);
+}
+
+function renderProjects(list) {
+  const tbody = document.getElementById('projects-tbody');
+  if (!list.length) {
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty"><div class="empty-icon">📁</div><p>No projects yet. Click <strong>+ Add Project</strong>.</p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = list.map(p => {
+    const pct = p.progress || 0;
+    const priorityColors = { low:'#94A3B8', medium:'#F59E0B', high:'#EF4444', urgent:'#7C3AED' };
+    const pc = priorityColors[p.priority] || '#94A3B8';
+    return `<tr class="project-row" onclick="openProject('${p.id}')">
+      <td>
+        <strong>${p.title}</strong>
+        ${p.priority ? `<span style="font-size:10px;font-weight:700;color:${pc};margin-left:6px;text-transform:uppercase">${p.priority}</span>` : ''}
+        ${p.description ? `<div style="font-size:12px;color:var(--text-muted);margin-top:2px">${p.description.slice(0,55)}${p.description.length>55?'…':''}</div>` : ''}
+      </td>
+      <td style="color:var(--text-muted)">${p.clients?.company_name||'—'}</td>
+      <td style="font-weight:600">${p.contract_value ? 'Rs.'+Number(p.contract_value).toLocaleString('en-IN') : '—'}</td>
+      <td style="color:var(--green);font-weight:600">${p.paid_amount ? 'Rs.'+Number(p.paid_amount).toLocaleString('en-IN') : 'Rs.0'}</td>
+      <td><span class="badge ${STATUS_BADGE[p.status]||'badge-gray'}">${p.status}</span></td>
+      <td style="min-width:120px">
+        <div class="progress-wrap">
+          <div class="progress-bar"><div class="progress-fill ${pct===100?'green':pct>=50?'amber':''}" style="width:${pct}%"></div></div>
+          <span class="progress-pct">${pct}%</span>
+        </div>
+      </td>
+      <td onclick="event.stopPropagation()">
+        <div style="display:flex;gap:5px">
+          <button class="btn btn-warning btn-xs" onclick="editProjectById('${p.id}')">Edit</button>
+          <button class="btn btn-danger btn-xs" onclick="deleteProject('${p.id}')">Delete</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function filterProjects() {
+  const q = document.getElementById('proj-search').value.toLowerCase();
+  const s = document.getElementById('proj-filter-status').value;
+  renderProjects(allProjects.filter(p =>
+    (!q || (p.title||'').toLowerCase().includes(q) || (p.clients?.company_name||'').toLowerCase().includes(q)) &&
+    (!s || p.status === s)
+  ));
+}
+
+/* ── USERS ── */
+async function loadUsers() {
+  const { data } = await sb.from('users').select('id, name').order('name');
+  allUsers = data || [];
+  const sel = document.getElementById('new-task-user');
+  sel.innerHTML = '<option value="">Assign to…</option>' + allUsers.map(u => `<option value="${u.id}">${u.name}</option>`).join('');
+}
+
+/* ── OPEN PROJECT DETAIL ── */
+async function openProject(id) {
+  currentProject = allProjects.find(p => p.id === id);
+  if (!currentProject) return;
+  document.getElementById('detail-title').textContent       = currentProject.title;
+  document.getElementById('detail-client-name').textContent = currentProject.clients?.company_name || '—';
+  const badge = document.getElementById('detail-badge');
+  badge.textContent = currentProject.status;
+  badge.className   = 'badge ' + (STATUS_BADGE[currentProject.status] || 'badge-gray');
+  document.getElementById('list-view').style.display   = 'none';
+  document.getElementById('detail-view').style.display = 'block';
+  document.getElementById('topbar-actions').innerHTML  = `<button class="btn btn-ghost btn-sm" onclick="showList()">← All Projects</button>`;
+  await Promise.all([loadTasks(), loadFinancials()]);
+}
+
+/* ── FINANCIAL SUMMARY ── */
+async function loadFinancials() {
+  const p = currentProject;
+  const contract  = p.contract_value || 0;
+  const { data: pays } = await sb.from('payments').select('amount').eq('project_id', p.id);
+  const paid      = (pays || []).reduce((s, x) => s + (x.amount || 0), 0);
+  const remaining = Math.max(0, contract - paid);
+  const pct       = contract > 0 ? Math.min(100, Math.round((paid / contract) * 100)) : 0;
+
+  const fmt = n => 'Rs.' + Number(n).toLocaleString('en-IN');
+  document.getElementById('fin-contract').textContent  = fmt(contract);
+  document.getElementById('fin-paid').textContent      = fmt(paid);
+  document.getElementById('fin-remaining').textContent = fmt(remaining);
+  document.getElementById('fin-pct').textContent       = pct + '%';
+  document.getElementById('fin-pct-label').textContent = pct + '%';
+  document.getElementById('fin-bar').style.width       = pct + '%';
+
+  const bar = document.getElementById('fin-bar');
+  bar.style.background = pct >= 100 ? '#34D399' : pct >= 80 ? '#FCD34D' : '#34D399';
+  await sb.from('projects').update({ paid_amount: paid }).eq('id', p.id);
+}
+
+function showList() {
+  document.getElementById('detail-view').style.display = 'none';
+  document.getElementById('list-view').style.display   = 'block';
+  document.getElementById('topbar-actions').innerHTML  = `<button class="btn btn-primary" onclick="openAddProject()">+ Add Project</button>`;
+  currentProject = null;
+}
+
+/* ── TASKS ── */
+async function loadTasks() {
+  const { data } = await sb.from('tasks')
+    .select('*, users(name)')
+    .eq('project_id', currentProject.id)
+    .order('created_at', { ascending: true });
+  currentTasks = data || [];
+  renderTasks();
+  updateProgress();
+}
+
+function renderTasks() {
+  const el = document.getElementById('tasks-list');
+  if (!currentTasks.length) {
+    el.innerHTML = `<div class="empty" style="padding:28px"><div class="empty-icon">✅</div><p>No tasks yet. Add one below.</p></div>`;
+    return;
+  }
+  el.innerHTML = currentTasks.map(t => `
+    <div class="task-item">
+      <input type="checkbox" class="task-check" ${t.is_completed?'checked':''} onchange="toggleTask('${t.id}',this.checked)" />
+      <span class="task-desc ${t.is_completed?'done':''}">${t.description}</span>
+      <span class="task-meta">
+        ${t.users?.name ? `<span class="chip" style="margin-right:6px">${t.users.name}</span>` : ''}
+        ${new Date(t.created_at).toLocaleDateString('en-IN')}
+      </span>
+      <button class="btn btn-danger btn-xs" onclick="deleteTask('${t.id}')">✕</button>
+    </div>`).join('');
+}
+
+async function updateProgress() {
+  const total     = currentTasks.length;
+  const completed = currentTasks.filter(t => t.is_completed).length;
+  const pct       = total ? Math.round((completed / total) * 100) : 0;
+  document.getElementById('detail-pct').textContent        = pct + '%';
+  document.getElementById('detail-task-count').textContent = `${completed} of ${total} tasks completed`;
+  const fill = document.getElementById('detail-progress-fill');
+  fill.style.width = pct + '%';
+  fill.className   = 'progress-fill' + (pct === 100 ? ' green' : pct >= 50 ? ' amber' : '');
+  const newStatus = pct === 100 ? 'completed' : (pct > 0 ? 'ongoing' : currentProject.status);
+  await sb.from('projects').update({ progress: pct, status: newStatus }).eq('id', currentProject.id);
+  const proj = allProjects.find(p => p.id === currentProject.id);
+  if (proj) { proj.progress = pct; proj.status = newStatus; }
+  currentProject.progress = pct;
+  currentProject.status   = newStatus;
+}
+
+async function addTask() {
+  const desc   = document.getElementById('new-task-desc').value.trim();
+  const userId = document.getElementById('new-task-user').value || null;
+  if (!desc) { showToast('Enter a task description.', 'error'); return; }
+  const { error } = await sb.from('tasks').insert([{ project_id: currentProject.id, description: desc, done_by: userId, is_completed: false }]);
+  if (error) { showToast('Error: ' + error.message, 'error'); return; }
+  document.getElementById('new-task-desc').value = '';
+  document.getElementById('new-task-user').value = '';
+  showToast('Task added.', 'success');
+  await loadTasks();
+}
+
+async function toggleTask(id, checked) {
+  await sb.from('tasks').update({ is_completed: checked }).eq('id', id);
+  const t = currentTasks.find(x => x.id === id);
+  if (t) t.is_completed = checked;
+  renderTasks();
+  updateProgress();
+}
+
+async function deleteTask(id) {
+  if (!confirm('Delete this task?')) return;
+  await sb.from('tasks').delete().eq('id', id);
+  currentTasks = currentTasks.filter(t => t.id !== id);
+  renderTasks();
+  updateProgress();
+}
+
+/* ── ADD / EDIT PROJECT MODAL ── */
+async function openAddProject() {
+  editingProjId = null;
+  document.getElementById('proj-modal-title').textContent = 'Add New Project';
+  document.getElementById('proj-submit-btn').textContent  = 'Save Project';
+  ['pf-title','pf-desc'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('pf-contract').value = '';
+  document.getElementById('pf-status').value   = 'not started';
+  document.getElementById('pf-priority').value = 'medium';
+  document.getElementById('pf-start').value    = '';
+  document.getElementById('pf-due').value      = '';
+  await populateClientDropdown(null);
+  document.getElementById('proj-modal').classList.add('open');
+}
+
+async function editProjectById(id) {
+  const p = allProjects.find(x => x.id === id);
+  if (!p) return;
+  editingProjId = id;
+  document.getElementById('proj-modal-title').textContent = 'Edit Project';
+  document.getElementById('proj-submit-btn').textContent  = 'Update Project';
+  document.getElementById('pf-title').value    = p.title || '';
+  document.getElementById('pf-contract').value = p.contract_value || '';
+  document.getElementById('pf-status').value   = p.status || 'not started';
+  document.getElementById('pf-priority').value = p.priority || 'medium';
+  document.getElementById('pf-start').value    = p.start_date ? p.start_date.split('T')[0] : '';
+  document.getElementById('pf-due').value      = p.due_date  ? p.due_date.split('T')[0]   : '';
+  document.getElementById('pf-desc').value     = p.description || '';
+  await populateClientDropdown(p.client_id);
+  document.getElementById('proj-modal').classList.add('open');
+}
+
+function editCurrentProject() { if (currentProject) editProjectById(currentProject.id); }
+
+async function populateClientDropdown(selectedId) {
+  const { data } = await sb.from('clients').select('id, company_name').order('company_name');
+  const sel = document.getElementById('pf-client');
+  sel.innerHTML = '<option value="">Select client…</option>' + (data||[]).map(c =>
+    `<option value="${c.id}" ${c.id === selectedId ? 'selected' : ''}>${c.company_name}</option>`
+  ).join('');
+}
+
+function closeProjModal() { document.getElementById('proj-modal').classList.remove('open'); editingProjId = null; }
+
+async function submitProject() {
+  const title    = document.getElementById('pf-title').value.trim();
+  const clientId = document.getElementById('pf-client').value;
+  if (!title)    { showToast('Project title is required.', 'error'); return; }
+  if (!clientId) { showToast('Please select a client.', 'error'); return; }
+
+  const btn = document.getElementById('proj-submit-btn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+
+  const payload = {
+    title,
+    client_id: clientId,
+    status:    document.getElementById('pf-status').value,
+  };
+
+  const descVal  = document.getElementById('pf-desc').value.trim() || null;
+  const priVal   = document.getElementById('pf-priority').value || null;
+  const startVal = document.getElementById('pf-start').value || null;
+  const dueVal   = document.getElementById('pf-due').value   || null;
+
+  const fullPayload = { ...payload, contract_value: parseFloat(document.getElementById('pf-contract').value) || 0, description: descVal, priority: priVal, start_date: startVal, due_date: dueVal };
+  const basePayload = { ...payload };
+  if (!editingProjId) { fullPayload.progress = 0; basePayload.progress = 0; }
+
+  let error;
+  if (editingProjId) {
+    ({ error } = await sb.from('projects').update(fullPayload).eq('id', editingProjId));
+    if (error && error.message.includes('column')) {
+      ({ error } = await sb.from('projects').update(basePayload).eq('id', editingProjId));
+    }
+  } else {
+    ({ error } = await sb.from('projects').insert([fullPayload]));
+    if (error && error.message.includes('column')) {
+      ({ error } = await sb.from('projects').insert([basePayload]));
+    }
+  }
+
+  if (error) { showToast('Error: ' + error.message, 'error'); btn.disabled = false; btn.textContent = editingProjId ? 'Update Project' : 'Save Project'; return; }
+  showToast(editingProjId ? 'Project updated!' : 'Project created!', 'success');
+  closeProjModal();
+  btn.disabled = false; btn.textContent = 'Save Project';
+  await loadProjects();
+  if (editingProjId && currentProject && editingProjId === currentProject.id) {
+    currentProject = allProjects.find(p => p.id === editingProjId);
+    if (currentProject) {
+      document.getElementById('detail-title').textContent = currentProject.title;
+      const badge = document.getElementById('detail-badge');
+      badge.textContent = currentProject.status;
+      badge.className   = 'badge ' + (STATUS_BADGE[currentProject.status] || 'badge-gray');
+    }
+  }
+}
+
+async function deleteProject(id) {
+  if (!confirm('Delete this project and all its tasks? This cannot be undone.')) return;
+  await sb.from('tasks').delete().eq('project_id', id);
+  const { error } = await sb.from('projects').delete().eq('id', id);
+  if (error) { showToast('Delete failed: ' + error.message, 'error'); return; }
+  showToast('Project deleted.', 'info');
+  if (currentProject?.id === id) showList();
+  await loadProjects();
+}
+
+/* ── PDF ── */
+function downloadPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  doc.setFontSize(16);
+  doc.text(currentProject.title, 14, 18);
+  doc.setFontSize(10); doc.setTextColor(120);
+  doc.text(`Client: ${currentProject.clients?.company_name||'—'}   Status: ${currentProject.status}   Priority: ${currentProject.priority||'—'}`, 14, 26);
+  doc.text(`Generated: ${new Date().toLocaleString('en-IN')}`, 14, 32);
+  const total = currentTasks.length, completed = currentTasks.filter(t=>t.is_completed).length;
+  doc.text(`Progress: ${total?Math.round(completed/total*100):0}% (${completed}/${total} tasks)`, 14, 38);
+  doc.autoTable({
+    startY: 44,
+    head: [['#','Task','Assigned To','Status','Date']],
+    body: currentTasks.map((t,i) => [i+1, t.description, t.users?.name||'—', t.is_completed?'Completed':'Pending', new Date(t.created_at).toLocaleDateString('en-IN')]),
+    styles: { fontSize: 9, font: 'helvetica' },
+    headStyles: { fillColor: [13,27,62] },
+    alternateRowStyles: { fillColor: [240,244,248] },
+  });
+  doc.save(`${currentProject.title.replace(/\s+/g,'_')}_tasks.pdf`);
+}
+</script>
+</body>
+</html>

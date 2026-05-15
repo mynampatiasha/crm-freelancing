@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Brand Shopee — Premium Fashion | Tirupati</title>
+  <meta name="description" content="Brand Shopee — Tirupati's finest clothing store. Premium quality men's fashion, exclusive brands, and unmatched style at Royal Nagar, Tirupati." />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+</head>
+<body>
+
+<!-- Custom Cursor -->
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- Loader -->
+<div id="loader">
+  <div class="loader-logo">Brand Shopee</div>
+  <div class="loader-bar"><div class="loader-bar-fill"></div></div>
+</div>
+
+<!-- Toast Notification -->
+<div class="toast" id="toast">Added to Wishlist ♥</div>
+
+<!-- ===== NAVIGATION ===== -->
+<nav id="navbar">
+  <a href="#" class="nav-logo">Brand<span>Shopee</span></a>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="#categories">Collections</a></li>
+    <li><a href="#featured">New Arrivals</a></li>
+    <li><a href="#about">Our Story</a></li>
+    <li><a href="#reviews">Reviews</a></li>
+    <li><a href="#gallery">Gallery</a></li>
+    <li><a href="#location" class="nav-cta">Visit Us</a></li>
+  </ul>
+  <div class="hamburger" id="hamburger">
+    <span></span><span></span><span></span>
+  </div>
+</nav>
+
+<!-- ===== HERO ===== -->
+<section class="hero" id="home">
+  <div class="hero-bg"></div>
+  <div class="hero-overlay"></div>
+  <div class="hero-grid-lines"></div>
+
+  <div class="hero-content">
+    <div class="hero-tag">Tirupati's Premier Fashion Destination</div>
+    <h1 class="hero-title">
+      Dress With<br>
+      <em>Intention,</em><br>
+      <span class="outline-text">Live in Style</span>
+    </h1>
+    <p class="hero-subtitle">
+      Curated premium menswear and fashion for every occasion. Explore exclusive brands, timeless pieces, and contemporary styles — all under one roof in the heart of Tirupati.
+    </p>
+    <div class="hero-actions">
+      <a href="#featured" class="btn-primary"><span>Shop New Arrivals</span></a>
+      <a href="#categories" class="btn-secondary">Browse Collections</a>
+    </div>
+  </div>
+
+  <div class="hero-stats">
+    <div class="stat">
+      <div class="stat-num">50+</div>
+      <div class="stat-label">Brands</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">500+</div>
+      <div class="stat-label">Styles</div>
+    </div>
+  </div>
+
+  <div class="hero-scroll">
+    <span>Scroll</span>
+    <div class="scroll-line"></div>
+  </div>
+</section>
+
+<!-- ===== TICKER ===== -->
+<div class="ticker-wrap">
+  <div class="ticker-inner">
+    <!-- duplicated for infinite loop -->
+    <span class="ticker-item">Premium Quality <span class="dot"></span></span>
+    <span class="ticker-item">Exclusive Brands <span class="dot"></span></span>
+    <span class="ticker-item">Men's Fashion <span class="dot"></span></span>
+    <span class="ticker-item">Royal Nagar, Tirupati <span class="dot"></span></span>
+    <span class="ticker-item">Open Until 10 PM <span class="dot"></span></span>
+    <span class="ticker-item">New Arrivals Weekly <span class="dot"></span></span>
+    <span class="ticker-item">Premium Quality <span class="dot"></span></span>
+    <span class="ticker-item">Exclusive Brands <span class="dot"></span></span>
+    <span class="ticker-item">Men's Fashion <span class="dot"></span></span>
+    <span class="ticker-item">Royal Nagar, Tirupati <span class="dot"></span></span>
+    <span class="ticker-item">Open Until 10 PM <span class="dot"></span></span>
+    <span class="ticker-item">New Arrivals Weekly <span class="dot"></span></span>
+  </div>
+</div>
+
+<!-- ===== CATEGORIES ===== -->
+<section id="categories">
+  <div class="section-header reveal">
+    <span class="section-tag">Our Collections</span>
+    <h2 class="section-title">Dress for Every <span class="accent">Occasion</span></h2>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="categories-grid reveal">
+    <div class="category-card">
+      <img class="category-img" src="https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=800&q=80" alt="Formals" loading="lazy" />
+      <div class="category-overlay">
+        <div class="category-name">Formals & Office Wear</div>
+        <div class="category-count">120+ Styles →</div>
+      </div>
+      <div class="category-arrow">↗</div>
+    </div>
+    <div class="category-card">
+      <img class="category-img" src="https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=600&q=80" alt="Casuals" loading="lazy" />
+      <div class="category-overlay">
+        <div class="category-name">Casuals</div>
+        <div class="category-count">200+ Styles →</div>
+      </div>
+      <div class="category-arrow">↗</div>
+    </div>
+    <div class="category-card">
+      <img class="category-img" src="https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=600&q=80" alt="Traditional" loading="lazy" />
+      <div class="category-overlay">
+        <div class="category-name">Traditional & Ethnic</div>
+        <div class="category-count">80+ Styles →</div>
+      </div>
+      <div class="category-arrow">↗</div>
+    </div>
+    <div class="category-card">
+      <img class="category-img" src="https://images.unsplash.com/photo-1449505278894-297fdb3edbc1?w=600&q=80" alt="Footwear" loading="lazy" />
+      <div class="category-overlay">
+        <div class="category-name">Footwear</div>
+        <div class="category-count">60+ Pairs →</div>
+      </div>
+      <div class="category-arrow">↗</div>
+    </div>
+    <div class="category-card">
+      <img class="category-img" src="https://images.unsplash.com/photo-1473496169904-658ba7c44d8a?w=600&q=80" alt="Accessories" loading="lazy" />
+      <div class="category-overlay">
+        <div class="category-name">Accessories</div>
+        <div class="category-count">40+ Items →</div>
+      </div>
+      <div class="category-arrow">↗</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FEATURED PRODUCTS ===== -->
+<section id="featured">
+  <div class="section-header reveal" style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:20px;">
+    <div>
+      <span class="section-tag">Fresh Picks</span>
+      <h2 class="section-title">New <span class="accent">Arrivals</span></h2>
+      <div class="section-line"></div>
+    </div>
+    <a href="#categories" class="btn-secondary" style="margin-bottom:4px;">View All →</a>
+  </div>
+
+  <div class="products-grid">
+    <div class="product-card reveal">
+      <div class="product-img-wrap">
+        <img src="https://images.unsplash.com/photo-1593030761757-71fae45fa0e7?w=600&q=80" alt="Premium Slim Suit" loading="lazy" />
+        <span class="product-badge new">New</span>
+        <div class="product-actions">
+          <button class="product-action-btn" onclick="addToCart(this)">Add to Cart</button>
+          <button class="product-action-btn wish" onclick="wishlist(this)">♡</button>
+        </div>
+      </div>
+      <div class="product-info">
+        <div class="product-name">Premium Slim-Fit Suit</div>
+        <div class="product-meta">
+          <div class="product-price">₹3,499 <span class="original">₹5,200</span></div>
+          <div class="product-rating">★★★★★ <span>(24)</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="product-card reveal">
+      <div class="product-img-wrap">
+        <img src="https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=600&q=80" alt="Oxford Shirt" loading="lazy" />
+        <div class="product-actions">
+          <button class="product-action-btn" onclick="addToCart(this)">Add to Cart</button>
+          <button class="product-action-btn wish" onclick="wishlist(this)">♡</button>
+        </div>
+      </div>
+      <div class="product-info">
+        <div class="product-name">Oxford Button-Down Shirt</div>
+        <div class="product-meta">
+          <div class="product-price">₹1,199 <span class="original">₹1,800</span></div>
+          <div class="product-rating">★★★★☆ <span>(18)</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="product-card reveal">
+      <div class="product-img-wrap">
+        <img src="https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=600&q=80" alt="Chinos" loading="lazy" />
+        <span class="product-badge">Sale</span>
+        <div class="product-actions">
+          <button class="product-action-btn" onclick="addToCart(this)">Add to Cart</button>
+          <button class="product-action-btn wish" onclick="wishlist(this)">♡</button>
+        </div>
+      </div>
+      <div class="product-info">
+        <div class="product-name">Stretch Comfort Chinos</div>
+        <div class="product-meta">
+          <div class="product-price">₹899 <span class="original">₹1,400</span></div>
+          <div class="product-rating">★★★★★ <span>(31)</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="product-card reveal">
+      <div class="product-img-wrap">
+        <img src="https://images.unsplash.com/photo-1551028719-00167b16eac5?w=600&q=80" alt="Jacket" loading="lazy" />
+        <span class="product-badge new">New</span>
+        <div class="product-actions">
+          <button class="product-action-btn" onclick="addToCart(this)">Add to Cart</button>
+          <button class="product-action-btn wish" onclick="wishlist(this)">♡</button>
+        </div>
+      </div>
+      <div class="product-info">
+        <div class="product-name">Urban Casual Jacket</div>
+        <div class="product-meta">
+          <div class="product-price">₹2,299 <span class="original">₹3,200</span></div>
+          <div class="product-rating">★★★★★ <span>(12)</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="product-card reveal">
+      <div class="product-img-wrap">
+        <img src="https://images.unsplash.com/photo-1622470953794-aa9c70b0fb9d?w=600&q=80" alt="Designer Shirt" loading="lazy" />
+        <div class="product-actions">
+          <button class="product-action-btn" onclick="addToCart(this)">Add to Cart</button>
+          <button class="product-action-btn wish" onclick="wishlist(this)">♡</button>
+        </div>
+      </div>
+      <div class="product-info">
+        <div class="product-name">Designer Shirt</div>
+        <div class="product-meta">
+          <div class="product-price">₹1,599 <span class="original">₹2,100</span></div>
+          <div class="product-rating">★★★★☆ <span>(9)</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="product-card reveal">
+      <div class="product-img-wrap">
+        <img src="https://images.unsplash.com/photo-1475178626620-a4d074967452?w=600&q=80" alt="Jeans" loading="lazy" />
+        <span class="product-badge">Sale</span>
+        <div class="product-actions">
+          <button class="product-action-btn" onclick="addToCart(this)">Add to Cart</button>
+          <button class="product-action-btn wish" onclick="wishlist(this)">♡</button>
+        </div>
+      </div>
+      <div class="product-info">
+        <div class="product-name">Slim Tapered Denim</div>
+        <div class="product-meta">
+          <div class="product-price">₹999 <span class="original">₹1,600</span></div>
+          <div class="product-rating">★★★★★ <span>(44)</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== ABOUT / BRAND STORY ===== -->
+<section id="about">
+  <div class="about-media reveal">
+    <img class="about-main-img" src="https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=800&q=80" alt="Brand Shopee Men's Store" loading="lazy" />
+    <img class="about-accent-img" src="https://images.unsplash.com/photo-1593030761757-71fae45fa0e7?w=400&q=80" alt="Men's Fashion Collection" loading="lazy" />
+    <div class="about-badge">
+      <span class="badge-num">10+</span>
+      <span class="badge-text">Years of Trust</span>
+    </div>
+  </div>
+
+  <div class="about-content reveal">
+    <span class="section-tag">Our Story</span>
+    <h2 class="section-title">Where Fashion Meets <span class="accent">Excellence</span></h2>
+    <div class="section-line"></div>
+
+    <p class="about-text" style="margin-top:32px;">
+      Brand Shopee began with a singular vision — to bring genuine premium fashion to Tirupati. Located in the heart of Royal Nagar on Air Bypass Road, we have curated a collection that celebrates craftsmanship, quality, and contemporary style.
+    </p>
+    <p class="about-text">
+      Every piece in our store is hand-selected for quality, fit, and enduring appeal. Whether you're dressing for a boardroom or a festival, we have the perfect outfit waiting for you.
+    </p>
+
+    <div class="about-features">
+      <div class="feature-item">
+        <div class="feature-icon">✦</div>
+        <div class="feature-name">Genuine Brands</div>
+        <div class="feature-desc">100% authentic products — no compromises, no counterfeits, ever.</div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">◈</div>
+        <div class="feature-name">Expert Styling</div>
+        <div class="feature-desc">Personal styling advice from our trained fashion consultants.</div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">◇</div>
+        <div class="feature-name">Premium Quality</div>
+        <div class="feature-desc">Every item passes our rigorous quality check before hitting the floor.</div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">⬡</div>
+        <div class="feature-name">Easy Returns</div>
+        <div class="feature-desc">Hassle-free 7-day exchange policy on all purchases.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== REVIEWS ===== -->
+<section id="reviews">
+  <div class="reviews-header reveal">
+    <span class="section-tag">Customer Love</span>
+    <h2 class="section-title">What Our Customers <span class="accent">Say</span></h2>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="overall-rating reveal">
+    <div class="rating-stars">★★★★★</div>
+  </div>
+
+  <div class="reviews-grid">
+    <div class="review-card reveal">
+      <div class="review-stars">★★★★★</div>
+      <p class="review-text">Super quality and a very nice brand selection. Found exactly what I was looking for — great fits and excellent fabric quality. Will definitely come back!</p>
+      <div class="reviewer">
+        <div class="reviewer-avatar">⭐</div>
+        <div>
+          <div class="reviewer-label">Verified Buyer · 1 Year Ago</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="review-card reveal">
+      <div class="review-stars">★★★★★</div>
+      <p class="review-text">Best shop for men's clothing in Tirupati. The variety is amazing — from formals to casuals, they have it all. The staff is very helpful and knows their fashion.</p>
+      <div class="reviewer">
+        <div class="reviewer-avatar">⭐</div>
+        <div>
+          <div class="reviewer-label">Verified Buyer · 3 Years Ago</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="review-card reveal">
+      <div class="review-stars">★★★★★</div>
+      <p class="review-text">Visited for a wedding outfit and walked out completely satisfied. The collection is trendy yet classic. The store is well-organized and very pleasant to browse through.</p>
+      <div class="reviewer">
+        <div class="reviewer-avatar">⭐</div>
+        <div>
+          <div class="reviewer-label">Verified Buyer · 8 Months Ago</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== GALLERY ===== -->
+<section id="gallery">
+  <div class="section-header reveal">
+    <span class="section-tag">In the Store</span>
+    <h2 class="section-title">Our <span class="accent">Gallery</span></h2>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="gallery-grid reveal">
+    <div class="gallery-item">
+      <img src="https://images.unsplash.com/photo-1593030761757-71fae45fa0e7?w=900&q=80" alt="Premium Men's Suits" loading="lazy" />
+      <div class="gallery-overlay"><span>+</span></div>
+    </div>
+    <div class="gallery-item">
+      <img src="https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=600&q=80" alt="Men's Formal Shirts" loading="lazy" />
+      <div class="gallery-overlay"><span>+</span></div>
+    </div>
+    <div class="gallery-item">
+      <img src="https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=600&q=80" alt="Men's Casual Trousers" loading="lazy" />
+      <div class="gallery-overlay"><span>+</span></div>
+    </div>
+    <div class="gallery-item">
+      <img src="https://images.unsplash.com/photo-1551028719-00167b16eac5?w=700&q=80" alt="Men's Jackets" loading="lazy" />
+      <div class="gallery-overlay"><span>+</span></div>
+    </div>
+    <div class="gallery-item">
+      <img src="https://images.unsplash.com/photo-1622470953794-aa9c70b0fb9d?w=600&q=80" alt="Men's Traditional Kurtas" loading="lazy" />
+      <div class="gallery-overlay"><span>+</span></div>
+    </div>
+    <div class="gallery-item">
+      <img src="https://images.unsplash.com/photo-1475178626620-a4d074967452?w=600&q=80" alt="Men's Denim Jeans" loading="lazy" />
+      <div class="gallery-overlay"><span>+</span></div>
+    </div>
+    <div class="gallery-item">
+      <img src="https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=600&q=80" alt="Men's Office Wear" loading="lazy" />
+      <div class="gallery-overlay"><span>+</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== LOCATION ===== -->
+<section id="location">
+  <div class="reveal">
+    <span class="section-tag">Find Us</span>
+    <h2 class="section-title">Visit <span class="accent">Brand Shopee</span></h2>
+    <div class="section-line"></div>
+
+    <ul class="info-list">
+      <li class="info-item">
+        <div class="info-icon">📍</div>
+        <div>
+          <div class="info-label">Address</div>
+          <div class="info-value">Air Bypass Rd, SBI Colony,<br>Royal Nagar, Tirupati,<br>Andhra Pradesh — 517501</div>
+        </div>
+      </li>
+      <li class="info-item">
+        <div class="info-icon">📞</div>
+        <div>
+          <div class="info-label">Phone</div>
+          <div class="info-value"><a href="tel:+917386797855" style="color:inherit;text-decoration:none;">+91 73867 97855</a></div>
+        </div>
+      </li>
+      <li class="info-item">
+        <div class="info-icon">🕐</div>
+        <div>
+          <div class="info-label">Store Hours</div>
+          <div class="info-value">Every day: 9:00 AM — 10:00 PM</div>
+          <div class="open-badge"><span class="open-dot"></span>Open Now</div>
+        </div>
+      </li>
+
+    </ul>
+  </div>
+
+  <div class="reveal">
+    <span class="section-tag">Hours & Map</span>
+    <h2 class="section-title">We're <span class="accent">Open</span></h2>
+    <div class="section-line"></div>
+
+    <div class="hours-grid" style="margin-top:36px;">
+      <div class="hours-row"><span class="hours-day">Monday</span><span class="hours-time">9 AM – 10 PM</span></div>
+      <div class="hours-row"><span class="hours-day">Tuesday</span><span class="hours-time">9 AM – 10 PM</span></div>
+      <div class="hours-row"><span class="hours-day">Wednesday</span><span class="hours-time">9 AM – 10 PM</span></div>
+      <div class="hours-row today"><span class="hours-day">Thursday ★</span><span class="hours-time">9 AM – 10 PM</span></div>
+      <div class="hours-row"><span class="hours-day">Friday</span><span class="hours-time">9 AM – 10 PM</span></div>
+      <div class="hours-row"><span class="hours-day">Saturday</span><span class="hours-time">9 AM – 10 PM</span></div>
+      <div class="hours-row"><span class="hours-day">Sunday</span><span class="hours-time">9 AM – 10 PM</span></div>
+    </div>
+
+    <div class="map-placeholder">
+      <div class="map-icon">🗺️</div>
+      <div class="map-label">Brand Shopee, Tirupati</div>
+      <div class="map-address">Air Bypass Rd, SBI Colony, Royal Nagar, Tirupati, AP 517501</div>
+      <a href="https://www.google.com/maps/place/Brand+Shopee/@13.6229611,79.4200619,17z/data=!3m1!4b1!4m6!3m5!1s0x3a4d4b22f9b18621:0x421becfad6714231!8m2!3d13.6229611!4d79.4200619!16s%2Fg%2F11hn86cl98" target="_blank" rel="noopener" class="map-btn">Open in Google Maps</a>
+    </div>
+  </div>
+</section>
+
+<!-- ===== NEWSLETTER ===== -->
+<section id="newsletter">
+  <div class="reveal">
+    <div class="newsletter-title">Stay <em>Stylish,</em> Stay Informed</div>
+    <p class="newsletter-sub">Get notified about new arrivals, exclusive offers and seasonal style drops.</p>
+    <form class="newsletter-form" onsubmit="handleSubscribe(event)">
+      <input type="email" placeholder="Your email address" required />
+      <button type="submit">Subscribe</button>
+    </form>
+  </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer>
+  <div class="footer-grid">
+    <div>
+      <a href="#home" class="footer-logo">Brand<span>Shopee</span></a>
+      <p class="footer-desc">Tirupati's finest clothing store — where premium fashion meets everyday style. Visit us at Royal Nagar, Air Bypass Road.</p>
+      <div class="footer-social">
+        <a href="#" class="social-btn" title="Instagram">📷</a>
+        <a href="#" class="social-btn" title="Facebook">📘</a>
+        <a href="#" class="social-btn" title="WhatsApp">💬</a>
+        <a href="tel:+917386797855" class="social-btn" title="Call Us">📞</a>
+      </div>
+    </div>
+
+    <div>
+      <div class="footer-heading">Collections</div>
+      <ul class="footer-links">
+        <li><a href="#">Formals & Office</a></li>
+        <li><a href="#">Casual Wear</a></li>
+        <li><a href="#">Traditional & Ethnic</a></li>
+        <li><a href="#">Denim & Jeans</a></li>
+        <li><a href="#">Jackets & Outerwear</a></li>
+        <li><a href="#">Footwear</a></li>
+      </ul>
+    </div>
+
+    <div>
+      <div class="footer-heading">Quick Links</div>
+      <ul class="footer-links">
+        <li><a href="#home">Home</a></li>
+        <li><a href="#about">Our Story</a></li>
+        <li><a href="#featured">New Arrivals</a></li>
+        <li><a href="#reviews">Reviews</a></li>
+        <li><a href="#gallery">Gallery</a></li>
+        <li><a href="#location">Visit Us</a></li>
+      </ul>
+    </div>
+
+    <div>
+      <div class="footer-heading">Info</div>
+      <ul class="footer-links">
+        <li><a href="#">Exchange Policy</a></li>
+        <li><a href="#">Size Guide</a></li>
+        <li><a href="#">Bulk Orders</a></li>
+        <li><a href="#">Gift Cards</a></li>
+        <li><a href="#">Loyalty Program</a></li>
+        <li><a href="tel:+917386797855">Contact: 73867 97855</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <p class="footer-copy">© 2025 <span class="footer-gold">Brand Shopee</span> · Royal Nagar, Tirupati. All rights reserved.</p>
+    <div class="footer-legal">
+      <a href="#">Privacy Policy</a>
+      <a href="#">Terms of Use</a>
+      <a href="#">Sitemap</a>
+    </div>
+  </div>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>

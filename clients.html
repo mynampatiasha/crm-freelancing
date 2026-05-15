@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CRM Freelancing — Clients</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .client-avatar { width:34px;height:34px;border-radius:8px;background:#DBEAFE;color:#1D4ED8;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-right:8px; }
+    .td-company { display:flex;align-items:center; }
+    .filter-row { display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px; }
+    .filter-row input,.filter-row select { background:#fff;border:1.5px solid var(--card-border);border-radius:var(--r);padding:8px 12px;color:var(--text);font-family:var(--font);font-size:13px;outline:none;transition:border-color 0.2s; }
+    .filter-row input:focus,.filter-row select:focus { border-color:var(--navy-accent); }
+    .filter-row input { flex:1;min-width:180px; }
+
+    /* ── MOBILE TOPBAR ── */
+    .topbar {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 56px;
+      background: #0D1B3E;
+      z-index: 150;
+      align-items: center;
+      padding: 0 16px;
+      gap: 12px;
+    }
+    .topbar .brand { font-size: 18px; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
+    .topbar .brand span { color: #3D8EFF; }
+
+    @media (max-width: 768px) {
+      .topbar { display: flex; }
+      .main { padding-top: 56px !important; }
+      .app-shell { display: block !important; }
+      .sidebar {
+        position: fixed !important;
+        top: 0; left: -280px;
+        width: 260px; height: 100vh;
+        z-index: 300;
+        transition: left 0.3s cubic-bezier(0.4,0,0.2,1);
+        overflow-y: auto;
+        box-shadow: 4px 0 24px rgba(0,0,0,0.3);
+      }
+      .sidebar.open { left: 0 !important; }
+    }
+
+    /* ── HAMBURGER ── */
+    .hamburger-btn {
+      background: none; border: none; cursor: pointer;
+      padding: 6px; display: flex; flex-direction: column;
+      gap: 5px; flex-shrink: 0;
+    }
+    .hamburger-btn span {
+      display: block; width: 22px; height: 2px;
+      background: #fff; border-radius: 2px;
+      transition: all 0.3s ease;
+    }
+    .hamburger-btn.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .hamburger-btn.open span:nth-child(2) { opacity: 0; }
+    .hamburger-btn.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    /* ── OVERLAY ── */
+    .sidebar-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5); z-index: 200;
+      backdrop-filter: blur(2px);
+    }
+    .sidebar-overlay.active { display: block; }
+
+    /* ── SIDEBAR CLOSE ── */
+    .sidebar-close {
+      display: none; position: absolute; top: 14px; right: 14px;
+      width: 30px; height: 30px; border-radius: 50%;
+      background: rgba(255,255,255,0.12); border: none;
+      color: #fff; font-size: 16px; cursor: pointer;
+      align-items: center; justify-content: center;
+      transition: background 0.2s;
+    }
+    .sidebar-close:hover { background: rgba(255,255,255,0.25); }
+    @media (max-width: 768px) { .sidebar-close { display: flex; } }
+
+    /* ── NAV ITEMS ── */
+    .nav-item { font-size: 15px !important; color: #ffffff !important; opacity: 0.82; transition: opacity 0.15s, background 0.15s; }
+    .nav-item:hover { opacity: 1; }
+    .nav-item.active { opacity: 1; color: #ffffff !important; }
+    .nav-label { font-size: 11px !important; color: rgba(255,255,255,0.4) !important; letter-spacing: 0.1em; }
+
+    /* ── SIDEBAR FOOTER ── */
+    .sidebar-footer { padding: 14px 16px 18px; border-top: 1px solid rgba(255,255,255,0.1); }
+    .user-info { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .user-avatar {
+      width: 38px; height: 38px; border-radius: 50%;
+      background: linear-gradient(135deg, #3D8EFF, #1D4ED8);
+      color: #fff; font-weight: 700; font-size: 14px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; box-shadow: 0 0 0 2px rgba(255,255,255,0.2);
+    }
+    .user-name { font-size: 13.5px; font-weight: 600; color: #ffffff; line-height: 1.2; }
+    .user-email { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 1px; }
+    .btn-logout {
+      width: 100%; display: flex; align-items: center; justify-content: center;
+      gap: 8px; padding: 9px 14px; border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.07);
+      color: rgba(255,255,255,0.75);
+      font-family: var(--font, 'Outfit', sans-serif);
+      font-size: 13px; font-weight: 500; cursor: pointer;
+      transition: background 0.2s, color 0.2s, border-color 0.2s;
+    }
+    .btn-logout:hover { background: rgba(239,68,68,0.18); border-color: rgba(239,68,68,0.4); color: #FCA5A5; }
+  </style>
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar">
+    <button class="sidebar-close" onclick="closeSidebar()">✕</button>
+    <div class="sidebar-brand">
+      <div class="brand-name">CRM<span>Freelancing</span></div>
+      <div class="brand-sub">Fleet Management</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-label">Main</div>
+      <a href="dashboard.html" class="nav-item" data-page="dashboard.html" onclick="closeSidebar()"><span class="nav-icon">⬛</span> Dashboard</a>
+      <a href="clients.html"   class="nav-item active" data-page="clients.html" onclick="closeSidebar()"><span class="nav-icon">🏢</span> Clients</a>
+      <a href="projects.html"  class="nav-item" data-page="projects.html" onclick="closeSidebar()"><span class="nav-icon">📁</span> Projects</a>
+      <a href="payments.html"  class="nav-item" data-page="payments.html" onclick="closeSidebar()"><span class="nav-icon">💰</span> Payments</a>
+      <div class="nav-label">Settings</div>
+      <a href="users.html" class="nav-item" data-page="users.html" onclick="closeSidebar()"><span class="nav-icon">👥</span> Users</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar" id="sidebar-user-avatar">?</div>
+        <div>
+          <div class="user-name" id="sidebar-user-name">Loading…</div>
+          <div class="user-email" id="sidebar-user-email"></div>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="doLogout()">
+        <span style="font-size:15px">→</span> Sign out
+      </button>
+    </div>
+  </aside>
+
+  <div class="topbar">
+    <button class="hamburger-btn" id="hamburger-btn" onclick="toggleSidebar()" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="brand">CRM<span>Freelancing</span></div>
+  </div>
+
+  <main class="main">
+    <div class="page-topbar">
+      <div class="page-topbar-left"><h1>Clients</h1><p>Manage all client accounts and documents</p></div>
+      <div class="page-topbar-right">
+        <button class="btn btn-primary" onclick="openModal()">+ Add Client</button>
+      </div>
+    </div>
+
+    <div class="page-content">
+      <div class="filter-row">
+        <input type="text" id="search-input" placeholder="Search by company or type…" oninput="filterClients()" />
+        <select id="filter-type" onchange="filterClients()">
+          <option value="">All Types</option>
+          <option>Transport</option><option>Logistics</option><option>Tourism</option><option>Corporate</option><option>Other</option>
+        </select>
+        <select id="filter-rating" onchange="filterClients()">
+          <option value="">All Ratings</option>
+          <option value="5">★★★★★ 5</option><option value="4">★★★★ 4+</option><option value="3">★★★ 3+</option>
+        </select>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Company</th><th>Phone</th><th>Type</th><th>Rating</th><th>Budget</th><th>Project Type</th><th>Added</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="clients-tbody">
+            <tr><td colspan="8"><div class="empty"><div class="empty-icon">🏢</div><p>Loading clients…</p></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ADD / EDIT MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modal-title">Add New Client</h2>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <form id="client-form" onsubmit="submitClient(event)">
+        <div class="form-grid">
+          <div class="field span2">
+            <label>Company Name *</label>
+            <input type="text" id="f-company" required placeholder="e.g. Sunrise Logistics" />
+          </div>
+          <div class="field">
+            <label>Phone</label>
+            <input type="tel" id="f-phone" placeholder="+91 98765 43210" />
+          </div>
+          <div class="field">
+            <label>Business Type</label>
+            <select id="f-type">
+              <option value="">Select type</option>
+              <option>Transport</option><option>Logistics</option><option>Tourism</option><option>Corporate</option><option>Other</option>
+            </select>
+          </div>
+          <div class="field span2">
+            <label>Address</label>
+            <input type="text" id="f-address" placeholder="Full address" />
+          </div>
+          <div class="field">
+            <label>Project Type</label>
+            <input type="text" id="f-project-type" placeholder="e.g. Fleet Management" />
+          </div>
+          <div class="field">
+            <label>Budget (₹)</label>
+            <input type="number" id="f-budget" placeholder="0" min="0" />
+          </div>
+          <div class="field">
+            <label>Profile / Website Link</label>
+            <input type="url" id="f-profile" placeholder="https://…" />
+          </div>
+          <div class="field">
+            <label>Rating (1–5)</label>
+            <div class="star-input">
+              <input type="radio" name="rating" id="s5" value="5"><label for="s5">★</label>
+              <input type="radio" name="rating" id="s4" value="4"><label for="s4">★</label>
+              <input type="radio" name="rating" id="s3" value="3"><label for="s3">★</label>
+              <input type="radio" name="rating" id="s2" value="2"><label for="s2">★</label>
+              <input type="radio" name="rating" id="s1" value="1"><label for="s1">★</label>
+            </div>
+          </div>
+          <div class="field span2">
+            <label>Notes</label>
+            <textarea id="f-notes" placeholder="Any additional notes…"></textarea>
+          </div>
+          <div class="field span2">
+            <label>Document Upload <span style="font-weight:400;text-transform:none;color:var(--text-light)">(optional)</span></label>
+            <input type="file" id="f-doc" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" />
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" id="submit-btn" onclick="submitClient(event)">Save Client</button>
+    </div>
+  </div>
+</div>
+
+<!-- VIEW MODAL -->
+<div class="modal-overlay" id="view-overlay" onclick="if(event.target===this)closeViewModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="view-title">Client Details</h2>
+      <button class="modal-close" onclick="closeViewModal()">✕</button>
+    </div>
+    <div class="modal-body" id="view-body"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeViewModal()">Close</button>
+      <button class="btn btn-ghost btn-sm" id="view-pdf-btn" onclick="downloadClientPDF()">⬇ Download PDF</button>
+      <button class="btn btn-warning btn-sm" id="view-edit-btn">Edit</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase.js"></script>
+<script>
+let allClients = [];
+let editingId  = null;
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.contains('open') ? closeSidebar() : openSidebar();
+}
+function openSidebar() {
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('sidebar-overlay').classList.add('active');
+  document.getElementById('hamburger-btn').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('active');
+  const btn = document.getElementById('hamburger-btn');
+  if (btn) btn.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+(async () => {
+  await requireAuth();
+  await loadSidebarUser();
+  setActiveNav();
+  await loadClients();
+})();
+
+async function loadClients() {
+  const { data, error } = await sb.from('clients').select('*').order('created_at', { ascending: false });
+  const tbody = document.getElementById('clients-tbody');
+  if (error) { tbody.innerHTML = `<tr><td colspan="8"><div class="empty"><div class="empty-icon">⚠️</div><p>${error.message}</p></div></td></tr>`; return; }
+  allClients = data || [];
+  renderClients(allClients);
+}
+
+function renderClients(list) {
+  const tbody = document.getElementById('clients-tbody');
+  if (!list.length) {
+    tbody.innerHTML = `<tr><td colspan="8"><div class="empty"><div class="empty-icon">🏢</div><p>No clients yet. Click <strong>+ Add Client</strong> to get started.</p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = list.map(c => {
+    const ini = (c.company_name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+    const stars = '★'.repeat(c.rating||0)+'☆'.repeat(5-(c.rating||0));
+    return `<tr>
+      <td><div class="td-company"><div class="client-avatar">${ini}</div><strong>${c.company_name}</strong></div></td>
+      <td style="color:var(--text-muted)">${c.phone||'—'}</td>
+      <td>${c.business_type?`<span class="chip">${c.business_type}</span>`:'—'}</td>
+      <td><span class="stars" title="${c.rating||0} stars">${stars}</span></td>
+      <td>${c.budget?'₹'+Number(c.budget).toLocaleString('en-IN'):'—'}</td>
+      <td style="color:var(--text-muted)">${c.project_type||'—'}</td>
+      <td style="color:var(--text-muted);font-size:12px">${new Date(c.created_at).toLocaleDateString('en-IN')}</td>
+      <td>
+        <div style="display:flex;gap:5px">
+          <button class="btn btn-ghost btn-xs" onclick="viewClient('${c.id}')">View</button>
+          <button class="btn btn-warning btn-xs" onclick="editClient('${c.id}')">Edit</button>
+          <button class="btn btn-danger btn-xs" onclick="deleteClient('${c.id}')">Delete</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function filterClients() {
+  const q = document.getElementById('search-input').value.toLowerCase();
+  const t = document.getElementById('filter-type').value;
+  const r = parseInt(document.getElementById('filter-rating').value) || 0;
+  renderClients(allClients.filter(c =>
+    (!q || (c.company_name||'').toLowerCase().includes(q) || (c.business_type||'').toLowerCase().includes(q)) &&
+    (!t || c.business_type === t) &&
+    (!r || (c.rating||0) >= r)
+  ));
+}
+
+function openModal(id = null) {
+  editingId = id;
+  document.getElementById('modal-title').textContent = id ? 'Edit Client' : 'Add New Client';
+  document.getElementById('submit-btn').textContent  = id ? 'Update Client' : 'Save Client';
+  if (!id) {
+    document.getElementById('client-form').reset();
+    document.querySelectorAll('input[name="rating"]').forEach(r => r.checked = false);
+  }
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); editingId = null; }
+
+function editClient(id) {
+  const c = allClients.find(x => x.id === id);
+  if (!c) return;
+  openModal(id);
+  document.getElementById('f-company').value      = c.company_name || '';
+  document.getElementById('f-phone').value        = c.phone || '';
+  document.getElementById('f-type').value         = c.business_type || '';
+  document.getElementById('f-address').value      = c.address || '';
+  document.getElementById('f-project-type').value = c.project_type || '';
+  document.getElementById('f-budget').value       = c.budget || '';
+  document.getElementById('f-profile').value      = c.profile_link || '';
+  document.getElementById('f-notes').value        = c.notes || '';
+  if (c.rating) { const r = document.getElementById('s' + c.rating); if (r) r.checked = true; }
+}
+
+async function submitClient(e) {
+  e.preventDefault();
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+
+  const ratingEl = document.querySelector('input[name="rating"]:checked');
+  let docUrl = null;
+  const file = document.getElementById('f-doc').files[0];
+
+  if (file) {
+    try {
+      const path = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+      const { error: upErr } = await sb.storage.from('documents').upload(path, file, { upsert: true });
+      if (!upErr) {
+        const { data: urlData } = sb.storage.from('documents').getPublicUrl(path);
+        docUrl = urlData.publicUrl;
+        showToast('Document uploaded successfully.', 'success');
+      } else {
+        showToast('Document upload failed: ' + upErr.message, 'error');
+      }
+    } catch(err) {
+      showToast('Document upload failed. Client saved without document.', 'info');
+    }
+  }
+
+  const payload = {
+    company_name:  document.getElementById('f-company').value.trim(),
+    phone:         document.getElementById('f-phone').value.trim() || null,
+    address:       document.getElementById('f-address').value.trim() || null,
+    business_type: document.getElementById('f-type').value || null,
+    project_type:  document.getElementById('f-project-type').value.trim() || null,
+    budget:        parseFloat(document.getElementById('f-budget').value) || null,
+    profile_link:  document.getElementById('f-profile').value.trim() || null,
+    rating:        ratingEl ? parseInt(ratingEl.value) : null,
+    notes:         document.getElementById('f-notes').value.trim() || null,
+  };
+  payload.document_url = docUrl || (editingId ? allClients.find(x=>x.id===editingId)?.document_url || null : null);
+
+  let error;
+  if (editingId) {
+    ({ error } = await sb.from('clients').update(payload).eq('id', editingId));
+  } else {
+    ({ error } = await sb.from('clients').insert([payload]));
+  }
+
+  if (error) { showToast('Error: ' + error.message, 'error'); btn.disabled = false; btn.textContent = editingId ? 'Update Client' : 'Save Client'; return; }
+  showToast(editingId ? 'Client updated!' : 'Client added!', 'success');
+  closeModal();
+  btn.disabled = false; btn.textContent = 'Save Client';
+  await loadClients();
+}
+
+let viewingClient = null;
+
+function viewClient(id) {
+  const c = allClients.find(x => x.id === id);
+  if (!c) return;
+  viewingClient = c;
+  document.getElementById('view-title').textContent = c.company_name;
+  const stars = '★'.repeat(c.rating||0)+'☆'.repeat(5-(c.rating||0));
+
+  let docHtml;
+  if (c.document_url) {
+    const fileName = c.document_url.split('/').pop().split('?')[0] || 'document';
+    docHtml = `
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <a href="${c.document_url}" target="_blank" class="btn btn-ghost btn-xs">👁 View</a>
+        <a href="javascript:void(0)" onclick="forceDownload('${c.document_url}','${fileName}')" class="btn btn-primary btn-xs">⬇ Download</a>
+        <span style="font-size:11.5px;color:var(--text-muted)">${fileName}</span>
+      </div>`;
+  } else {
+    docHtml = `<span style="color:var(--text-light);font-size:13px">No document uploaded</span>`;
+  }
+
+  document.getElementById('view-body').innerHTML = `
+    <div class="detail-row"><span class="detail-key">Company</span><span class="detail-val"><strong>${c.company_name}</strong></span></div>
+    <div class="detail-row"><span class="detail-key">Phone</span><span class="detail-val">${c.phone||'—'}</span></div>
+    <div class="detail-row"><span class="detail-key">Address</span><span class="detail-val">${c.address||'—'}</span></div>
+    <div class="detail-row"><span class="detail-key">Business Type</span><span class="detail-val">${c.business_type?`<span class="chip">${c.business_type}</span>`:'—'}</span></div>
+    <div class="detail-row"><span class="detail-key">Project Type</span><span class="detail-val">${c.project_type||'—'}</span></div>
+    <div class="detail-row"><span class="detail-key">Budget</span><span class="detail-val">${c.budget?'₹'+Number(c.budget).toLocaleString('en-IN'):'—'}</span></div>
+    <div class="detail-row"><span class="detail-key">Rating</span><span class="detail-val"><span class="stars">${stars}</span></span></div>
+    <div class="detail-row"><span class="detail-key">Profile Link</span><span class="detail-val">${c.profile_link?`<a href="${c.profile_link}" target="_blank" style="color:var(--navy-accent)">${c.profile_link}</a>`:'—'}</span></div>
+    <div class="detail-row"><span class="detail-key">Notes</span><span class="detail-val" style="color:var(--text-muted)">${c.notes||'—'}</span></div>
+    <div class="detail-row"><span class="detail-key">Document</span><span class="detail-val">${docHtml}</span></div>
+    <div class="detail-row"><span class="detail-key">Added</span><span class="detail-val" style="color:var(--text-muted)">${new Date(c.created_at).toLocaleString('en-IN')}</span></div>
+    <div id="client-projects-section" style="margin-top:16px">
+      <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:10px">Projects & Financials</div>
+      <div id="client-projects-list"><div style="color:var(--text-light);font-size:13px">Loading projects…</div></div>
+    </div>
+  `;
+  document.getElementById('view-edit-btn').onclick = () => { closeViewModal(); editClient(id); };
+  document.getElementById('view-overlay').classList.add('open');
+  loadClientProjects(c.id, c.budget);
+}
+
+async function loadClientProjects(clientId, clientBudget) {
+  const { data: projects } = await sb
+    .from('projects')
+    .select('id, title, status, contract_value, paid_amount, progress')
+    .eq('client_id', clientId)
+    .order('created_at', { ascending: false });
+
+  const el = document.getElementById('client-projects-list');
+  if (!projects?.length) {
+    el.innerHTML = `<div style="color:var(--text-light);font-size:13px;padding:8px 0">No projects yet for this client.</div>`;
+    return;
+  }
+
+  const fmt = n => 'Rs.' + Number(n||0).toLocaleString('en-IN');
+  let totalContract = 0, totalPaid = 0;
+
+  const rows = projects.map(p => {
+    const contract  = p.contract_value || 0;
+    const paid      = p.paid_amount || 0;
+    const remaining = Math.max(0, contract - paid);
+    const pct       = contract > 0 ? Math.min(100, Math.round(paid / contract * 100)) : 0;
+    totalContract  += contract;
+    totalPaid      += paid;
+    const STATUS_BADGE = { 'not started':'badge-blue','ongoing':'badge-amber','on hold':'badge-purple','paused':'badge-gray','completed':'badge-green','cancelled':'badge-red' };
+    return `
+      <div style="background:#F8FAFC;border:1.5px solid var(--card-border);border-radius:var(--r);padding:12px 14px;margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px">
+          <strong style="font-size:13.5px">${p.title}</strong>
+          <span class="badge ${STATUS_BADGE[p.status]||'badge-gray'}">${p.status}</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px">
+          <div><div style="font-size:10px;color:var(--text-muted);font-weight:600;text-transform:uppercase">Contract</div><div style="font-size:13px;font-weight:700">${fmt(contract)}</div></div>
+          <div><div style="font-size:10px;color:var(--text-muted);font-weight:600;text-transform:uppercase">Paid</div><div style="font-size:13px;font-weight:700;color:var(--green)">${fmt(paid)}</div></div>
+          <div><div style="font-size:10px;color:var(--text-muted);font-weight:600;text-transform:uppercase">Remaining</div><div style="font-size:13px;font-weight:700;color:var(--amber)">${fmt(remaining)}</div></div>
+        </div>
+        <div style="background:#E2E8F0;border-radius:20px;height:5px;overflow:hidden">
+          <div style="height:100%;border-radius:20px;background:${pct>=100?'var(--green)':'var(--navy-accent)'};width:${pct}%;transition:width 0.4s"></div>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:4px;text-align:right">${pct}% collected</div>
+      </div>`;
+  }).join('');
+
+  const totalRemaining = Math.max(0, totalContract - totalPaid);
+
+  el.innerHTML = rows + `
+    <div style="background:linear-gradient(135deg,#0D1B3E,#1A3A6B);border-radius:var(--r);padding:14px;margin-top:4px">
+      <div style="font-size:11px;color:rgba(255,255,255,0.6);font-weight:700;text-transform:uppercase;margin-bottom:10px">Grand Total — All Projects</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+        <div><div style="font-size:10px;color:rgba(255,255,255,0.5)">Total Contract</div><div style="font-size:14px;font-weight:800;color:#fff">${fmt(totalContract)}</div></div>
+        <div><div style="font-size:10px;color:rgba(255,255,255,0.5)">Total Paid</div><div style="font-size:14px;font-weight:800;color:#34D399">${fmt(totalPaid)}</div></div>
+        <div><div style="font-size:10px;color:rgba(255,255,255,0.5)">Total Remaining</div><div style="font-size:14px;font-weight:800;color:#FCD34D">${fmt(totalRemaining)}</div></div>
+      </div>
+      ${clientBudget ? `<div style="margin-top:10px;font-size:11px;color:rgba(255,255,255,0.5)">Client overall budget: <strong style="color:#fff">${fmt(clientBudget)}</strong></div>` : ''}
+    </div>`;
+}
+
+function downloadClientPDF() {
+  const c = viewingClient;
+  if (!c) return;
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  doc.setFillColor(13, 27, 62);
+  doc.rect(0, 0, 210, 28, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(16); doc.setFont('helvetica', 'bold');
+  doc.text('Client Profile', 14, 12);
+  doc.setFontSize(10); doc.setFont('helvetica', 'normal');
+  doc.text('CRM Freelancing', 14, 20);
+  doc.text(`Generated: ${new Date().toLocaleString('en-IN')}`, 210 - 14, 20, { align: 'right' });
+  doc.setTextColor(13, 27, 62);
+  doc.setFontSize(18); doc.setFont('helvetica', 'bold');
+  doc.text(c.company_name || '—', 14, 42);
+  const stars = '★'.repeat(c.rating||0) + '☆'.repeat(5-(c.rating||0));
+  doc.setFontSize(12); doc.setTextColor(245, 158, 11);
+  doc.text(stars, 14, 50);
+  doc.setTextColor(0, 0, 0);
+  const rows = [
+    ['Phone', c.phone || '—'],
+    ['Address', c.address || '—'],
+    ['Business Type', c.business_type || '—'],
+    ['Project Type', c.project_type || '—'],
+    ['Budget', c.budget ? 'Rs.' + Number(c.budget).toLocaleString('en-IN') : '—'],
+    ['Profile Link', c.profile_link || '—'],
+    ['Notes', c.notes || '—'],
+    ['Document', c.document_url ? c.document_url : 'Not uploaded'],
+    ['Date Added', new Date(c.created_at).toLocaleString('en-IN')],
+  ];
+  let y = 60;
+  doc.setFontSize(9);
+  rows.forEach(([key, val]) => {
+    doc.setFont('helvetica', 'bold'); doc.setTextColor(100, 116, 139);
+    doc.text(key.toUpperCase(), 14, y);
+    doc.setFont('helvetica', 'normal'); doc.setTextColor(26, 35, 64);
+    const lines = doc.splitTextToSize(String(val), 130);
+    doc.text(lines, 70, y);
+    y += Math.max(lines.length * 5, 7);
+    doc.setDrawColor(226, 232, 240); doc.line(14, y, 196, y);
+    y += 4;
+  });
+  doc.setFontSize(8); doc.setTextColor(148, 163, 184);
+  doc.text('CRM Freelancing - Confidential Client Document', 105, 290, { align: 'center' });
+  doc.save(`${(c.company_name||'client').replace(/\s+/g,'_')}_profile.pdf`);
+}
+
+function closeViewModal() { document.getElementById('view-overlay').classList.remove('open'); }
+
+async function forceDownload(url, fileName) {
+  try {
+    const res  = await fetch(url);
+    const blob = await res.blob();
+    const a    = document.createElement('a');
+    a.href     = URL.createObjectURL(blob);
+    a.download = fileName;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  } catch(e) {
+    showToast('Download failed. Try right-clicking → Save as.', 'error');
+  }
+}
+
+async function deleteClient(id) {
+  if (!confirm('Delete this client? This cannot be undone.')) return;
+  const { error } = await sb.from('clients').delete().eq('id', id);
+  if (error) { showToast('Delete failed: ' + error.message, 'error'); return; }
+  showToast('Client deleted.', 'info');
+  await loadClients();
+}
+</script>
+</body>
+</html>

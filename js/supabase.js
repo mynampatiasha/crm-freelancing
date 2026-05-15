@@ -19,7 +19,9 @@ async function getUser() {
 async function requireAuth() {
   const session = await getSession();
   if (!session) {
-    window.location.href = '/index.html';
+    // Works for both file:// and http:// hosting
+    const base = window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1);
+    window.location.href = base + 'index.html';
   }
   return session;
 }
@@ -31,20 +33,22 @@ function showToast(msg, type = 'success') {
   if (!t) return;
   t.textContent = msg;
   t.className = `show ${type}`;
-  setTimeout(() => t.className = '', 3000);
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => { t.className = ''; }, 3500);
 }
 
 // ── LOGOUT ────────────────────────────────────────────────────────────────────
 
 async function doLogout() {
   await sb.auth.signOut();
-  window.location.href = '/index.html';
+  const base = window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1);
+  window.location.href = base + 'index.html';
 }
 
 // ── SIDEBAR ACTIVE ────────────────────────────────────────────────────────────
 
 function setActiveNav() {
-  const path = window.location.pathname.split('/').pop();
+  const path = window.location.pathname.split('/').pop() || window.location.href.split('/').pop().split('?')[0];
   document.querySelectorAll('.nav-item').forEach(el => {
     el.classList.toggle('active', el.dataset.page === path);
   });
@@ -62,7 +66,7 @@ function initials(name) {
 async function loadSidebarUser() {
   const user = await getUser();
   if (!user) return;
-  const { data: profile } = await sb.from('users').select('name').eq('id', user.id).single();
+  const { data: profile } = await sb.from('users').select('name').eq('auth_id', user.id).maybeSingle();
   const name = profile?.name || user.email;
   const el = document.getElementById('sidebar-user-name');
   const em = document.getElementById('sidebar-user-email');
