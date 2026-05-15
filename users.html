@@ -164,9 +164,8 @@
       </div>
     </div>
 
-    <div class="page-content">
-      <div class="stats-grid" style="margin-bottom:20px">
-        <div class="stat-card">
+    <div class="page-content" style="padding-bottom:0">
+      <div class="stats-grid" style="margin-bottom:20px">        <div class="stat-card">
           <div class="glow" style="background:#3D8EFF"></div>
           <div class="stat-label">Total Users</div>
           <div class="stat-value c-navy" id="stat-users">—</div>
@@ -186,7 +185,7 @@
         </div>
       </div>
 
-      <div class="table-wrap">
+      <div class="table-wrap" style="margin-bottom:0">
         <table>
           <thead>
             <tr><th>Name</th><th>Email</th><th>Role</th><th>Access</th><th>Joined</th><th>Actions</th></tr>
@@ -263,6 +262,13 @@
           <select id="ef-role">
             <option value="admin">Admin</option>
           </select>
+        </div>
+        <div class="field span2">
+          <label>New Password <span style="font-weight:400;text-transform:none;color:var(--text-light)">(leave blank to keep current)</span></label>
+          <div class="pass-wrap">
+            <input type="password" id="ef-pass" placeholder="Enter new password…" />
+            <button type="button" class="pass-toggle" onclick="togglePass('ef-pass')">👁</button>
+          </div>
         </div>
       </div>
     </div>
@@ -431,23 +437,44 @@ function openEditModal(id) {
   if (!u) return;
   editingUID = id;
   document.getElementById('ef-name').value = u.name || '';
-  document.getElementById('ef-role').value = u.role || 'member';
+  document.getElementById('ef-role').value = u.role || 'admin';
+  document.getElementById('ef-pass').value = '';
   document.getElementById('edit-modal').classList.add('open');
 }
 function closeEditModal() { document.getElementById('edit-modal').classList.remove('open'); editingUID = null; }
 
 async function submitEditUser() {
-  const name = document.getElementById('ef-name').value.trim();
-  const role = document.getElementById('ef-role').value;
+  const name    = document.getElementById('ef-name').value.trim();
+  const role    = document.getElementById('ef-role').value;
+  const newPass = document.getElementById('ef-pass').value;
   if (!name) { showToast('Name is required.', 'error'); return; }
 
   const btn = document.getElementById('edit-submit-btn');
   btn.disabled = true; btn.textContent = 'Updating…';
 
+  // Update name + role in users table
   const { error } = await sb.from('users').update({ name, role }).eq('id', editingUID);
   if (error) { showToast('Error: ' + error.message, 'error'); btn.disabled = false; btn.textContent = 'Update User'; return; }
 
-  showToast('User updated!', 'success');
+  // Update password if provided
+  if (newPass.trim().length > 0) {
+    if (newPass.trim().length < 6) {
+      showToast('Password must be at least 6 characters.', 'error');
+      btn.disabled = false; btn.textContent = 'Update User'; return;
+    }
+    const { error: passErr } = await sb.auth.updateUser({ password: newPass.trim() });
+    if (passErr) {
+      showToast('Name updated but password change failed: ' + passErr.message, 'error');
+      btn.disabled = false; btn.textContent = 'Update User';
+      closeEditModal();
+      await loadUsers();
+      return;
+    }
+    showToast('User and password updated!', 'success');
+  } else {
+    showToast('User updated!', 'success');
+  }
+
   closeEditModal();
   btn.disabled = false; btn.textContent = 'Update User';
   await loadUsers();
