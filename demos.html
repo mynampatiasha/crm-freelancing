@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CRM Freelancing — Demos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .back-btn { display:inline-flex;align-items:center;gap:6px;color:var(--text-muted);font-size:13px;cursor:pointer;background:none;border:none;font-family:var(--font);padding:0;margin-bottom:16px;transition:color 0.15s; }
+    .back-btn:hover { color:var(--navy-accent); }
+    .detail-header { display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:20px; }
+    .detail-header-left h2 { font-size:20px;font-weight:700;margin-bottom:4px; }
+    .detail-header-left p { font-size:13px;color:var(--text-muted); }
+    .add-task-form { display:flex;gap:10px;flex-wrap:wrap;padding:14px 16px;background:#F8FAFC;border-top:1px solid var(--card-border); }
+    .add-task-form input,.add-task-form select { background:#fff;border:1.5px solid var(--card-border);border-radius:var(--r);padding:8px 12px;color:var(--text);font-family:var(--font);font-size:13px;outline:none;transition:border-color 0.2s; }
+    .add-task-form input:focus,.add-task-form select:focus { border-color:var(--navy-accent); }
+    .add-task-form input { flex:1;min-width:160px; }
+    .demo-row { cursor:pointer; }
+    .demo-row:hover td { background:#EFF6FF !important; }
+    .filter-row { display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px; }
+    .filter-row input,.filter-row select { background:#fff;border:1.5px solid var(--card-border);border-radius:var(--r);padding:8px 12px;color:var(--text);font-family:var(--font);font-size:13px;outline:none;transition:border-color 0.2s; }
+    .filter-row input:focus,.filter-row select:focus { border-color:var(--navy-accent); }
+    .filter-row input { flex:1;min-width:160px; }
+
+    /* ASSIGNEES */
+    .assignee-chips { display:flex;flex-wrap:wrap;gap:5px;margin-top:6px; }
+    .assignee-chip { display:inline-flex;align-items:center;gap:5px;background:#EFF6FF;color:#1D4ED8;border-radius:20px;padding:3px 10px;font-size:12px;font-weight:600; }
+    .assignee-chip .rm { cursor:pointer;color:#94A3B8;font-size:13px;line-height:1; }
+    .assignee-chip .rm:hover { color:#EF4444; }
+
+    /* DEMO LINK FIELD */
+    .demo-link-field { display:none;margin-top:10px; }
+    .demo-link-field.show { display:block; }
+    .demo-link-input { width:100%;border:1.5px solid var(--card-border);border-radius:var(--r);padding:9px 12px;font-family:var(--font);font-size:13px;color:var(--text);outline:none;transition:border-color 0.2s; }
+    .demo-link-input:focus { border-color:var(--navy-accent); }
+
+    /* STATUS CHANGE MODAL */
+    .status-modal-overlay { position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:500;display:none;align-items:center;justify-content:center;backdrop-filter:blur(3px); }
+    .status-modal-overlay.open { display:flex; }
+    .status-modal { background:#fff;border-radius:14px;padding:24px;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,0.2); }
+    .status-modal h3 { font-size:16px;font-weight:700;margin-bottom:16px;color:var(--text); }
+    .status-modal label { font-size:12px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.05em; }
+    .status-modal textarea { width:100%;border:1.5px solid var(--card-border);border-radius:var(--r);padding:10px 12px;font-family:var(--font);font-size:13px;color:var(--text);resize:vertical;min-height:80px;outline:none;transition:border-color 0.2s;margin-bottom:14px; }
+    .status-modal textarea:focus { border-color:var(--navy-accent); }
+    .status-modal-actions { display:flex;gap:10px;justify-content:flex-end; }
+
+    /* HISTORY TIMELINE */
+    .timeline { padding:4px 0; }
+    .timeline-item { display:flex;gap:14px;padding:12px 0;border-bottom:1px solid var(--card-border);position:relative; }
+    .timeline-item:last-child { border-bottom:none; }
+    .timeline-dot { width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;margin-top:2px; }
+    .timeline-content { flex:1; }
+    .timeline-title { font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px; }
+    .timeline-meta { font-size:11px;color:var(--text-muted);margin-bottom:4px; }
+    .timeline-note { font-size:12px;color:var(--text-muted);background:#F8FAFC;border-radius:6px;padding:6px 10px;margin-top:6px;border-left:3px solid var(--card-border); }
+    .timeline-link { font-size:12px;margin-top:6px; }
+    .timeline-link a { color:var(--navy-accent);text-decoration:none;font-weight:600; }
+    .timeline-link a:hover { text-decoration:underline; }
+
+    /* CONVERT BANNER */
+    .convert-banner { background:linear-gradient(135deg,#065F46,#047857);border-radius:12px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px; }
+    .convert-banner-text { color:#fff; }
+    .convert-banner-text strong { font-size:15px;display:block;margin-bottom:2px; }
+    .convert-banner-text span { font-size:12px;opacity:0.8; }
+
+    /* DEMO LINK DISPLAY */
+    .demo-link-display { display:flex;align-items:center;gap:10px;background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:10px;padding:10px 14px;margin-bottom:18px; }
+    .demo-link-display a { color:#1D4ED8;font-weight:600;font-size:13px;text-decoration:none;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+    .demo-link-display a:hover { text-decoration:underline; }
+
+    /* TOPBAR */
+    .topbar { display:none;position:fixed;top:0;left:0;right:0;height:56px;background:#0D1B3E;z-index:150;align-items:center;padding:0 16px;gap:12px; }
+    .topbar .brand { font-size:18px;font-weight:800;color:#fff;letter-spacing:-0.5px; }
+    .topbar .brand span { color:#3D8EFF; }
+
+    @media (max-width:768px) {
+      .topbar { display:flex; }
+      .main { padding-top:56px !important; }
+      .app-shell { display:block !important; }
+      .sidebar { position:fixed !important;top:0;left:-280px;width:260px;height:100vh;z-index:300;transition:left 0.3s cubic-bezier(0.4,0,0.2,1);overflow-y:auto;box-shadow:4px 0 24px rgba(0,0,0,0.3); }
+      .sidebar.open { left:0 !important; }
+    }
+
+    .hamburger-btn { background:none;border:none;cursor:pointer;padding:6px;display:flex;flex-direction:column;gap:5px;flex-shrink:0; }
+    .hamburger-btn span { display:block;width:22px;height:2px;background:#fff;border-radius:2px;transition:all 0.3s ease; }
+    .hamburger-btn.open span:nth-child(1) { transform:translateY(7px) rotate(45deg); }
+    .hamburger-btn.open span:nth-child(2) { opacity:0; }
+    .hamburger-btn.open span:nth-child(3) { transform:translateY(-7px) rotate(-45deg); }
+
+    .sidebar-overlay { display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;backdrop-filter:blur(2px); }
+    .sidebar-overlay.active { display:block; }
+
+    .sidebar-close { display:none;position:absolute;top:14px;right:14px;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,0.12);border:none;color:#fff;font-size:16px;cursor:pointer;align-items:center;justify-content:center;transition:background 0.2s; }
+    .sidebar-close:hover { background:rgba(255,255,255,0.25); }
+    @media (max-width:768px) { .sidebar-close { display:flex; } }
+
+    .nav-item { font-size:15px !important;color:#ffffff !important;opacity:0.82;transition:opacity 0.15s,background 0.15s; }
+    .nav-item:hover { opacity:1; }
+    .nav-item.active { opacity:1;color:#ffffff !important; }
+    .nav-label { font-size:11px !important;color:rgba(255,255,255,0.4) !important;letter-spacing:0.1em; }
+
+    .sidebar-footer { padding:14px 16px 18px;border-top:1px solid rgba(255,255,255,0.1); }
+    .user-info { display:flex;align-items:center;gap:10px;margin-bottom:12px; }
+    .user-avatar { width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#3D8EFF,#1D4ED8);color:#fff;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 0 0 2px rgba(255,255,255,0.2); }
+    .user-name { font-size:13.5px;font-weight:600;color:#ffffff;line-height:1.2; }
+    .user-email { font-size:11px;color:rgba(255,255,255,0.5);margin-top:1px; }
+    .btn-logout { width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:9px 14px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.75);font-family:var(--font,'Outfit',sans-serif);font-size:13px;font-weight:500;cursor:pointer;transition:background 0.2s,color 0.2s,border-color 0.2s; }
+    .btn-logout:hover { background:rgba(239,68,68,0.18);border-color:rgba(239,68,68,0.4);color:#FCA5A5; }
+
+    /* MULTI SELECT CHECKBOXES */
+    .user-checkbox-list { display:flex;flex-direction:column;gap:8px;max-height:180px;overflow-y:auto;border:1.5px solid var(--card-border);border-radius:var(--r);padding:10px 12px; }
+    .user-checkbox-item { display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer; }
+    .user-checkbox-item input { width:15px;height:15px;accent-color:var(--navy-accent);cursor:pointer; }
+  </style>
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar">
+    <button class="sidebar-close" onclick="closeSidebar()">✕</button>
+    <div class="sidebar-brand">
+      <div class="brand-name">CRM<span>Freelancing</span></div>
+      <div class="brand-sub">Your agency, fully in control</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-label">Main</div>
+      <a href="dashboard.html" class="nav-item" data-page="dashboard.html" onclick="closeSidebar()"><span class="nav-icon">⬛</span> Dashboard</a>
+      <a href="leads.html" class="nav-item" data-page="leads.html" onclick="closeSidebar()"><span class="nav-icon">🎯</span> Leads</a>
+      <a href="clients.html" class="nav-item" data-page="clients.html" onclick="closeSidebar()"><span class="nav-icon">🏢</span> Clients</a>
+      <a href="demos.html" class="nav-item active" data-page="demos.html" onclick="closeSidebar()"><span class="nav-icon">🎬</span> Demos</a>
+      <a href="projects.html" class="nav-item" data-page="projects.html" onclick="closeSidebar()"><span class="nav-icon">📁</span> Projects</a>
+      <a href="payments.html" class="nav-item" data-page="payments.html" onclick="closeSidebar()"><span class="nav-icon">💰</span> Payments</a>
+      <div class="nav-label">Settings</div>
+      <a href="users.html" class="nav-item" data-page="users.html" onclick="closeSidebar()"><span class="nav-icon">👥</span> Users</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar" id="sidebar-user-avatar">?</div>
+        <div>
+          <div class="user-name" id="sidebar-user-name">Loading…</div>
+          <div class="user-email" id="sidebar-user-email"></div>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="doLogout()">
+        <span style="font-size:15px">→</span> Sign out
+      </button>
+    </div>
+  </aside>
+
+  <div class="topbar">
+    <button class="hamburger-btn" id="hamburger-btn" onclick="toggleSidebar()" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="brand">CRM<span>Freelancing</span></div>
+  </div>
+
+  <main class="main">
+    <div class="page-topbar">
+      <div class="page-topbar-left"><h1>Demos</h1><p>Manage demo sessions from draft to approval</p></div>
+      <div class="page-topbar-right" id="topbar-actions">
+        <button class="btn btn-primary" onclick="openAddDemo()">+ Add Demo</button>
+      </div>
+    </div>
+
+    <div class="page-content">
+
+      <!-- LIST VIEW -->
+      <div id="list-view">
+        <div class="filter-row">
+          <input type="text" id="demo-search" placeholder="Search demos or leads…" oninput="filterDemos()" />
+          <select id="demo-filter-status" onchange="filterDemos()">
+            <option value="">All Status</option>
+            <option value="draft">Draft</option>
+            <option value="in progress">In Progress</option>
+            <option value="sent for review">Sent for Review</option>
+            <option value="revision requested">Revision Requested</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Demo</th>
+                <th>Lead</th>
+                <th>Assigned To</th>
+                <th>Deadline</th>
+                <th>Status</th>
+                <th>Progress</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="demos-tbody">
+              <tr><td colspan="7"><div class="empty"><div class="empty-icon">🎬</div><p>Loading demos…</p></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- DETAIL VIEW -->
+      <div id="detail-view" style="display:none">
+        <button class="back-btn" onclick="showList()">← Back to Demos</button>
+
+        <div class="detail-header">
+          <div class="detail-header-left">
+            <h2 id="detail-title">Demo Title</h2>
+            <p id="detail-lead-name">Lead Name</p>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <span id="detail-badge" class="badge badge-blue">draft</span>
+            <button class="btn btn-warning btn-sm" onclick="editCurrentDemo()">Edit Demo</button>
+            <button class="btn btn-primary btn-sm" onclick="openStatusModal()">Change Status</button>
+          </div>
+        </div>
+
+        <!-- Convert to Project Banner (shown only when approved) -->
+        <div id="convert-banner" class="convert-banner" style="display:none">
+          <div class="convert-banner-text">
+            <strong>🎉 Demo Approved!</strong>
+            <span>Ready to convert this demo into a live project</span>
+          </div>
+          <button class="btn btn-sm" style="background:#fff;color:#065F46;font-weight:700" onclick="convertToProject()">Convert to Project →</button>
+        </div>
+
+        <!-- Demo Link Display -->
+        <div id="demo-link-display" class="demo-link-display" style="display:none">
+          <span style="font-size:18px">🔗</span>
+          <a id="demo-link-anchor" href="#" target="_blank">Demo Link</a>
+          <button class="btn btn-ghost btn-xs" onclick="openEditLinkModal()">Edit Link</button>
+        </div>
+
+        <!-- Progress Card -->
+        <div class="card" style="margin-bottom:18px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+            <span style="font-size:13px;font-weight:700;color:var(--text)">Task Progress</span>
+            <span id="detail-pct" style="font-size:13px;font-weight:700;color:var(--navy-accent)">0%</span>
+          </div>
+          <div class="progress-bar" style="height:8px">
+            <div class="progress-fill" id="detail-progress-fill" style="width:0%"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:12px;color:var(--text-muted)">
+            <span id="detail-task-count">0 of 0 tasks completed</span>
+            <span id="detail-deadline"></span>
+          </div>
+        </div>
+
+        <!-- Assignees Card -->
+        <div class="card" style="margin-bottom:18px">
+          <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px">Assigned Team Members</div>
+          <div id="detail-assignees" class="assignee-chips"></div>
+        </div>
+
+        <!-- Tasks -->
+        <div class="section" style="margin-bottom:18px">
+          <div class="section-head"><h2>Tasks</h2></div>
+          <div class="table-wrap" style="overflow:visible">
+            <div id="tasks-list"></div>
+            <div class="add-task-form">
+              <input type="text" id="new-task-desc" placeholder="New task description…" />
+              <select id="new-task-user"><option value="">Assign to…</option></select>
+              <button class="btn btn-primary btn-sm" onclick="addTask()">+ Add Task</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Status History Timeline -->
+        <div class="section">
+          <div class="section-head"><h2>Status History</h2></div>
+          <div class="card">
+            <div id="timeline-list" class="timeline">
+              <div style="text-align:center;padding:20px;color:var(--text-muted);font-size:13px">No history yet.</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ADD / EDIT DEMO MODAL -->
+<div class="modal-overlay" id="demo-modal" onclick="if(event.target===this)closeDemoModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="demo-modal-title">Add New Demo</h2>
+      <button class="modal-close" onclick="closeDemoModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="field span2">
+          <label>Demo Title *</label>
+          <input type="text" id="df-title" placeholder="e.g. E-commerce Website Demo" />
+        </div>
+        <div class="field span2">
+          <label>Linked Lead</label>
+          <select id="df-lead"><option value="">Select lead…</option></select>
+        </div>
+        <div class="field span2">
+          <label>Assign To (select one or more)</label>
+          <div class="user-checkbox-list" id="df-assignees-list"></div>
+        </div>
+        <div class="field">
+          <label>Status</label>
+          <select id="df-status">
+            <option value="draft">Draft</option>
+            <option value="in progress">In Progress</option>
+            <option value="sent for review">Sent for Review</option>
+            <option value="revision requested">Revision Requested</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Deadline</label>
+          <input type="datetime-local" id="df-deadline" />
+        </div>
+        <div class="field span2">
+          <label>Demo Link (paste when ready)</label>
+          <input type="url" id="df-link" placeholder="https://…" />
+        </div>
+        <div class="field span2">
+          <label>Description</label>
+          <textarea id="df-desc" placeholder="Demo description or requirements…"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeDemoModal()">Cancel</button>
+      <button class="btn btn-primary" id="demo-submit-btn" onclick="submitDemo()">Save Demo</button>
+    </div>
+  </div>
+</div>
+
+<!-- STATUS CHANGE MODAL -->
+<div class="status-modal-overlay" id="status-modal">
+  <div class="status-modal">
+    <h3>Change Demo Status</h3>
+    <div style="margin-bottom:14px">
+      <label>New Status</label>
+      <select id="sm-status" style="width:100%;border:1.5px solid var(--card-border);border-radius:var(--r);padding:9px 12px;font-family:var(--font);font-size:13px;color:var(--text);outline:none;margin-bottom:0" onchange="onStatusModalChange()">
+        <option value="draft">Draft</option>
+        <option value="in progress">In Progress</option>
+        <option value="sent for review">Sent for Review</option>
+        <option value="revision requested">Revision Requested</option>
+        <option value="approved">Approved</option>
+        <option value="rejected">Rejected</option>
+      </select>
+    </div>
+    <div id="sm-link-wrap" class="demo-link-field">
+      <label style="font-size:12px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.05em">Demo Link *</label>
+      <input type="url" class="demo-link-input" id="sm-link" placeholder="https://…" />
+      <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Paste the link to share with the client</div>
+    </div>
+    <div style="margin-bottom:14px">
+      <label>Note <span style="font-weight:400;opacity:0.7">(optional)</span></label>
+      <textarea id="sm-note" placeholder="Add a note about this status change…"></textarea>
+    </div>
+    <div class="status-modal-actions">
+      <button class="btn btn-ghost" onclick="closeStatusModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveStatusChange()">Save Status</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT LINK MODAL -->
+<div class="status-modal-overlay" id="edit-link-modal">
+  <div class="status-modal">
+    <h3>Edit Demo Link</h3>
+    <div style="margin-bottom:16px">
+      <label style="font-size:12px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.05em">Demo Link</label>
+      <input type="url" class="demo-link-input" id="edit-link-input" placeholder="https://…" />
+    </div>
+    <div class="status-modal-actions">
+      <button class="btn btn-ghost" onclick="closeEditLinkModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEditedLink()">Save Link</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase.js"></script>
+<script>
+let allDemos      = [];
+let allUsers      = [];
+let allLeads      = [];
+let currentDemo   = null;
+let currentTasks  = [];
+let editingDemoId = null;
+let currentUserName = '';
+
+const STATUS_BADGE = {
+  'draft':              'badge-gray',
+  'in progress':        'badge-amber',
+  'sent for review':    'badge-blue',
+  'revision requested': 'badge-purple',
+  'approved':           'badge-green',
+  'rejected':           'badge-red',
+};
+
+const STATUS_EMOJI = {
+  'draft':              '📝',
+  'in progress':        '⚙️',
+  'sent for review':    '📤',
+  'revision requested': '🔄',
+  'approved':           '✅',
+  'rejected':           '❌',
+};
+
+(async () => {
+  await requireAuth();
+  const u = await loadSidebarUser();
+  currentUserName = document.getElementById('sidebar-user-name')?.textContent || 'Team';
+  setActiveNav();
+  await Promise.all([loadDemos(), loadUsers(), loadLeads()]);
+})();
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.contains('open') ? closeSidebar() : openSidebar();
+}
+function openSidebar() {
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('sidebar-overlay').classList.add('active');
+  document.getElementById('hamburger-btn').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('active');
+  const btn = document.getElementById('hamburger-btn');
+  if (btn) btn.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+/* ── LOAD DATA ── */
+async function loadDemos() {
+  const { data, error } = await sb.from('demos')
+    .select('*, leads(company_name), demo_assignees(user_id, users(name))')
+    .order('created_at', { ascending: false });
+  const tbody = document.getElementById('demos-tbody');
+  if (error) {
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty"><div class="empty-icon">⚠️</div><p>${error.message}</p></div></td></tr>`;
+    return;
+  }
+  allDemos = data || [];
+  renderDemos(allDemos);
+}
+
+async function loadUsers() {
+  const { data } = await sb.from('users').select('id, name').order('name');
+  allUsers = data || [];
+  const sel = document.getElementById('new-task-user');
+  sel.innerHTML = '<option value="">Assign to…</option>' + allUsers.map(u => `<option value="${u.id}">${u.name}</option>`).join('');
+  renderAssigneeCheckboxes();
+}
+
+async function loadLeads() {
+  const { data } = await sb.from('leads').select('id, company_name').order('company_name');
+  allLeads = data || [];
+  const sel = document.getElementById('df-lead');
+  sel.innerHTML = '<option value="">Select lead…</option>' + allLeads.map(l =>
+    `<option value="${l.id}">${l.company_name}</option>`
+  ).join('');
+}
+
+function renderAssigneeCheckboxes(selectedIds = []) {
+  const wrap = document.getElementById('df-assignees-list');
+  wrap.innerHTML = allUsers.map(u => `
+    <label class="user-checkbox-item">
+      <input type="checkbox" value="${u.id}" ${selectedIds.includes(u.id) ? 'checked' : ''} />
+      ${u.name}
+    </label>
+  `).join('');
+}
+
+function getSelectedAssignees() {
+  return [...document.querySelectorAll('#df-assignees-list input:checked')].map(cb => cb.value);
+}
+
+/* ── RENDER LIST ── */
+function renderDemos(list) {
+  const tbody = document.getElementById('demos-tbody');
+  if (!list.length) {
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty"><div class="empty-icon">🎬</div><p>No demos yet. Click <strong>+ Add Demo</strong>.</p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = list.map(d => {
+    const pct = d.progress || 0;
+    const assignees = (d.demo_assignees || []).map(a => a.users?.name).filter(Boolean);
+    const deadline = d.deadline ? new Date(d.deadline).toLocaleDateString('en-IN') : '—';
+    return `<tr class="demo-row" onclick="openDemo('${d.id}')">
+      <td>
+        <strong>${d.title}</strong>
+        ${d.description ? `<div style="font-size:12px;color:var(--text-muted);margin-top:2px">${d.description.slice(0,55)}${d.description.length>55?'…':''}</div>` : ''}
+      </td>
+      <td style="color:var(--text-muted)">${d.leads?.company_name || '—'}</td>
+      <td>
+        <div style="display:flex;flex-wrap:wrap;gap:4px">
+          ${assignees.length ? assignees.map(n => `<span class="chip">${n}</span>`).join('') : '<span style="color:var(--text-muted);font-size:12px">—</span>'}
+        </div>
+      </td>
+      <td style="color:var(--text-muted);font-size:13px">${deadline}</td>
+      <td><span class="badge ${STATUS_BADGE[d.status] || 'badge-gray'}">${d.status}</span></td>
+      <td style="min-width:120px">
+        <div class="progress-wrap">
+          <div class="progress-bar"><div class="progress-fill ${pct===100?'green':pct>=50?'amber':''}" style="width:${pct}%"></div></div>
+          <span class="progress-pct">${pct}%</span>
+        </div>
+      </td>
+      <td onclick="event.stopPropagation()">
+        <div style="display:flex;gap:5px">
+          <button class="btn btn-warning btn-xs" onclick="editDemoById('${d.id}')">Edit</button>
+          <button class="btn btn-danger btn-xs" onclick="deleteDemo('${d.id}')">Delete</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function filterDemos() {
+  const q = document.getElementById('demo-search').value.toLowerCase();
+  const s = document.getElementById('demo-filter-status').value;
+  renderDemos(allDemos.filter(d =>
+    (!q || (d.title||'').toLowerCase().includes(q) || (d.leads?.company_name||'').toLowerCase().includes(q)) &&
+    (!s || d.status === s)
+  ));
+}
+
+/* ── OPEN DETAIL ── */
+async function openDemo(id) {
+  const { data, error } = await sb.from('demos')
+    .select('*, leads(id, company_name), demo_assignees(user_id, users(name))')
+    .eq('id', id)
+    .single();
+  if (error || !data) { showToast('Could not load demo.', 'error'); return; }
+  currentDemo = data;
+
+  document.getElementById('detail-title').textContent    = currentDemo.title;
+  document.getElementById('detail-lead-name').textContent = currentDemo.leads?.company_name || '—';
+  const badge = document.getElementById('detail-badge');
+  badge.textContent = currentDemo.status;
+  badge.className   = 'badge ' + (STATUS_BADGE[currentDemo.status] || 'badge-gray');
+
+  // Deadline
+  document.getElementById('detail-deadline').textContent = currentDemo.deadline
+    ? '⏰ Due: ' + new Date(currentDemo.deadline).toLocaleString('en-IN', {dateStyle:'medium',timeStyle:'short'})
+    : '';
+
+  // Convert banner
+  document.getElementById('convert-banner').style.display = currentDemo.status === 'approved' ? 'flex' : 'none';
+
+  // Demo link
+  renderDemoLink();
+
+  // Assignees
+  const assignees = (currentDemo.demo_assignees || []).map(a => a.users?.name).filter(Boolean);
+  document.getElementById('detail-assignees').innerHTML = assignees.length
+    ? assignees.map(n => `<span class="assignee-chip"><span>👤</span>${n}</span>`).join('')
+    : '<span style="color:var(--text-muted);font-size:13px">No one assigned yet</span>';
+
+  document.getElementById('list-view').style.display   = 'none';
+  document.getElementById('detail-view').style.display = 'block';
+  document.getElementById('topbar-actions').innerHTML  = `<button class="btn btn-ghost btn-sm" onclick="showList()">← All Demos</button>`;
+
+  await Promise.all([loadTasks(), loadTimeline()]);
+}
+
+function renderDemoLink() {
+  const linkDisplay = document.getElementById('demo-link-display');
+  const anchor = document.getElementById('demo-link-anchor');
+  if (currentDemo.demo_link) {
+    linkDisplay.style.display = 'flex';
+    anchor.href = currentDemo.demo_link;
+    anchor.textContent = currentDemo.demo_link;
+  } else {
+    linkDisplay.style.display = 'none';
+  }
+}
+
+function showList() {
+  document.getElementById('detail-view').style.display = 'none';
+  document.getElementById('list-view').style.display   = 'block';
+  document.getElementById('topbar-actions').innerHTML  = `<button class="btn btn-primary" onclick="openAddDemo()">+ Add Demo</button>`;
+  currentDemo = null;
+}
+
+/* ── TASKS ── */
+async function loadTasks() {
+  const { data } = await sb.from('tasks')
+    .select('*, users(name)')
+    .eq('demo_id', currentDemo.id)
+    .order('created_at', { ascending: true });
+  currentTasks = data || [];
+  renderTasks();
+  updateProgress();
+}
+
+function renderTasks() {
+  const el = document.getElementById('tasks-list');
+  if (!currentTasks.length) {
+    el.innerHTML = `<div class="empty" style="padding:28px"><div class="empty-icon">✅</div><p>No tasks yet. Add one below.</p></div>`;
+    return;
+  }
+  el.innerHTML = currentTasks.map(t => `
+    <div class="task-item">
+      <input type="checkbox" class="task-check" ${t.is_completed?'checked':''} onchange="toggleTask('${t.id}',this.checked)" />
+      <span class="task-desc ${t.is_completed?'done':''}">${t.description}</span>
+      <span class="task-meta">
+        ${t.users?.name ? `<span class="chip" style="margin-right:6px">${t.users.name}</span>` : ''}
+        ${new Date(t.created_at).toLocaleDateString('en-IN')}
+      </span>
+      <button class="btn btn-danger btn-xs" onclick="deleteTask('${t.id}')">✕</button>
+    </div>`).join('');
+}
+
+async function updateProgress() {
+  const total     = currentTasks.length;
+  const completed = currentTasks.filter(t => t.is_completed).length;
+  const pct       = total ? Math.round((completed / total) * 100) : 0;
+  document.getElementById('detail-pct').textContent        = pct + '%';
+  document.getElementById('detail-task-count').textContent = `${completed} of ${total} tasks completed`;
+  const fill = document.getElementById('detail-progress-fill');
+  fill.style.width = pct + '%';
+  fill.className   = 'progress-fill' + (pct===100?' green':pct>=50?' amber':'');
+  await sb.from('demos').update({ progress: pct }).eq('id', currentDemo.id);
+  const d = allDemos.find(x => x.id === currentDemo.id);
+  if (d) d.progress = pct;
+  currentDemo.progress = pct;
+}
+
+async function addTask() {
+  const desc   = document.getElementById('new-task-desc').value.trim();
+  const userId = document.getElementById('new-task-user').value || null;
+  if (!desc) { showToast('Enter a task description.', 'error'); return; }
+  const { error } = await sb.from('tasks').insert([{ demo_id: currentDemo.id, description: desc, done_by: userId, is_completed: false }]);
+  if (error) { showToast('Error: ' + error.message, 'error'); return; }
+  document.getElementById('new-task-desc').value = '';
+  document.getElementById('new-task-user').value = '';
+  showToast('Task added.', 'success');
+  await loadTasks();
+}
+
+async function toggleTask(id, checked) {
+  await sb.from('tasks').update({ is_completed: checked }).eq('id', id);
+  const t = currentTasks.find(x => x.id === id);
+  if (t) t.is_completed = checked;
+  renderTasks();
+  updateProgress();
+}
+
+async function deleteTask(id) {
+  if (!confirm('Delete this task?')) return;
+  await sb.from('tasks').delete().eq('id', id);
+  currentTasks = currentTasks.filter(t => t.id !== id);
+  renderTasks();
+  updateProgress();
+}
+
+/* ── STATUS CHANGE ── */
+function openStatusModal() {
+  if (!currentDemo) return;
+  document.getElementById('sm-status').value = currentDemo.status;
+  document.getElementById('sm-note').value   = '';
+  document.getElementById('sm-link').value   = currentDemo.demo_link || '';
+  onStatusModalChange();
+  document.getElementById('status-modal').classList.add('open');
+}
+
+function closeStatusModal() {
+  document.getElementById('status-modal').classList.remove('open');
+}
+
+function onStatusModalChange() {
+  const val = document.getElementById('sm-status').value;
+  const linkWrap = document.getElementById('sm-link-wrap');
+  linkWrap.classList.toggle('show', val === 'sent for review');
+}
+
+async function saveStatusChange() {
+  const newStatus = document.getElementById('sm-status').value;
+  const note      = document.getElementById('sm-note').value.trim() || null;
+  const link      = document.getElementById('sm-link').value.trim() || null;
+
+  if (newStatus === 'sent for review' && !link && !currentDemo.demo_link) {
+    showToast('Please paste the demo link before sending for review.', 'error');
+    return;
+  }
+
+  const fromStatus = currentDemo.status;
+  const updatePayload = { status: newStatus };
+  if (link) updatePayload.demo_link = link;
+
+  const { error } = await sb.from('demos').update(updatePayload).eq('id', currentDemo.id);
+  if (error) { showToast('Error: ' + error.message, 'error'); return; }
+
+  // Log to history
+  await sb.from('demo_status_logs').insert([{
+    demo_id:     currentDemo.id,
+    from_status: fromStatus,
+    to_status:   newStatus,
+    note:        note,
+    changed_by:  currentUserName,
+  }]);
+
+  currentDemo.status    = newStatus;
+  if (link) currentDemo.demo_link = link;
+
+  // Update UI
+  const badge = document.getElementById('detail-badge');
+  badge.textContent = newStatus;
+  badge.className   = 'badge ' + (STATUS_BADGE[newStatus] || 'badge-gray');
+  document.getElementById('convert-banner').style.display = newStatus === 'approved' ? 'flex' : 'none';
+  renderDemoLink();
+
+  // Update list
+  const d = allDemos.find(x => x.id === currentDemo.id);
+  if (d) { d.status = newStatus; if (link) d.demo_link = link; }
+
+  closeStatusModal();
+  showToast('Status updated!', 'success');
+  await loadTimeline();
+}
+
+/* ── TIMELINE ── */
+async function loadTimeline() {
+  const { data } = await sb.from('demo_status_logs')
+    .select('*')
+    .eq('demo_id', currentDemo.id)
+    .order('changed_at', { ascending: true });
+  const logs = data || [];
+  const el = document.getElementById('timeline-list');
+  if (!logs.length) {
+    el.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:13px">No status changes logged yet.</div>`;
+    return;
+  }
+  el.innerHTML = logs.map(log => {
+    const emoji = STATUS_EMOJI[log.to_status] || '🔵';
+    const badgeCls = STATUS_BADGE[log.to_status] || 'badge-gray';
+    const dt = new Date(log.changed_at).toLocaleString('en-IN', {dateStyle:'medium',timeStyle:'short'});
+    return `<div class="timeline-item">
+      <div class="timeline-dot" style="background:#EFF6FF">${emoji}</div>
+      <div class="timeline-content">
+        <div class="timeline-title">
+          ${log.from_status ? `<span style="color:var(--text-muted)">${log.from_status}</span> → ` : ''}
+          <span class="badge ${badgeCls}" style="font-size:11px">${log.to_status}</span>
+        </div>
+        <div class="timeline-meta">by <strong>${log.changed_by || '—'}</strong> · ${dt}</div>
+        ${log.note ? `<div class="timeline-note">💬 ${log.note}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ── EDIT LINK ── */
+function openEditLinkModal() {
+  document.getElementById('edit-link-input').value = currentDemo.demo_link || '';
+  document.getElementById('edit-link-modal').classList.add('open');
+}
+function closeEditLinkModal() {
+  document.getElementById('edit-link-modal').classList.remove('open');
+}
+async function saveEditedLink() {
+  const link = document.getElementById('edit-link-input').value.trim();
+  const { error } = await sb.from('demos').update({ demo_link: link || null }).eq('id', currentDemo.id);
+  if (error) { showToast('Error: ' + error.message, 'error'); return; }
+  currentDemo.demo_link = link || null;
+  const d = allDemos.find(x => x.id === currentDemo.id);
+  if (d) d.demo_link = link || null;
+  renderDemoLink();
+  closeEditLinkModal();
+  showToast('Demo link updated!', 'success');
+}
+
+/* ── CONVERT TO PROJECT ── */
+async function convertToProject() {
+  if (!confirm('Convert this demo into a project? This will create a new project linked to the lead\'s client.')) return;
+  const leadId = currentDemo.lead_id;
+  if (!leadId) { showToast('This demo has no linked lead.', 'error'); return; }
+
+  // Get client_id from lead
+  const { data: lead } = await sb.from('leads').select('client_id, company_name').eq('id', leadId).single();
+  if (!lead?.client_id) { showToast('Lead has no linked client. Convert the lead to a client first.', 'error'); return; }
+
+  const { error } = await sb.from('projects').insert([{
+    title:        currentDemo.title + ' (from Demo)',
+    client_id:    lead.client_id,
+    status:       'not started',
+    description:  currentDemo.description || null,
+    progress:     0,
+  }]);
+  if (error) { showToast('Error creating project: ' + error.message, 'error'); return; }
+
+  // Mark demo as converted
+  await sb.from('demos').update({ status: 'approved' }).eq('id', currentDemo.id);
+  showToast('Project created successfully! Go to Projects to view it.', 'success');
+}
+
+/* ── ADD / EDIT DEMO MODAL ── */
+async function openAddDemo() {
+  editingDemoId = null;
+  document.getElementById('demo-modal-title').textContent = 'Add New Demo';
+  document.getElementById('demo-submit-btn').textContent  = 'Save Demo';
+  document.getElementById('df-title').value   = '';
+  document.getElementById('df-desc').value    = '';
+  document.getElementById('df-link').value    = '';
+  document.getElementById('df-deadline').value = '';
+  document.getElementById('df-status').value  = 'draft';
+  document.getElementById('df-lead').value    = '';
+  renderAssigneeCheckboxes([]);
+  document.getElementById('demo-modal').classList.add('open');
+}
+
+async function editDemoById(id) {
+  const d = allDemos.find(x => x.id === id);
+  if (!d) return;
+  editingDemoId = id;
+  document.getElementById('demo-modal-title').textContent = 'Edit Demo';
+  document.getElementById('demo-submit-btn').textContent  = 'Update Demo';
+  document.getElementById('df-title').value    = d.title || '';
+  document.getElementById('df-desc').value     = d.description || '';
+  document.getElementById('df-link').value     = d.demo_link || '';
+  document.getElementById('df-status').value   = d.status || 'draft';
+  document.getElementById('df-lead').value     = d.lead_id || '';
+  document.getElementById('df-deadline').value = d.deadline ? d.deadline.slice(0,16) : '';
+  const selectedIds = (d.demo_assignees || []).map(a => a.user_id);
+  renderAssigneeCheckboxes(selectedIds);
+  document.getElementById('demo-modal').classList.add('open');
+}
+
+function editCurrentDemo() { if (currentDemo) editDemoById(currentDemo.id); }
+function closeDemoModal() { document.getElementById('demo-modal').classList.remove('open'); editingDemoId = null; }
+
+async function submitDemo() {
+  const title  = document.getElementById('df-title').value.trim();
+  const leadId = document.getElementById('df-lead').value || null;
+  if (!title) { showToast('Demo title is required.', 'error'); return; }
+
+  const btn = document.getElementById('demo-submit-btn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+
+  const payload = {
+    title,
+    lead_id:     leadId,
+    status:      document.getElementById('df-status').value,
+    description: document.getElementById('df-desc').value.trim() || null,
+    demo_link:   document.getElementById('df-link').value.trim() || null,
+    deadline:    document.getElementById('df-deadline').value || null,
+    created_by:  currentUserName,
+  };
+
+  let demoId = editingDemoId;
+  let error;
+
+  if (editingDemoId) {
+    ({ error } = await sb.from('demos').update(payload).eq('id', editingDemoId));
+  } else {
+    const { data, error: err } = await sb.from('demos').insert([payload]).select().single();
+    error = err;
+    if (data) demoId = data.id;
+  }
+
+  if (error) { showToast('Error: ' + error.message, 'error'); btn.disabled = false; btn.textContent = editingDemoId ? 'Update Demo' : 'Save Demo'; return; }
+
+  // Save assignees
+  if (demoId) {
+    await sb.from('demo_assignees').delete().eq('demo_id', demoId);
+    const selectedIds = getSelectedAssignees();
+    if (selectedIds.length) {
+      await sb.from('demo_assignees').insert(selectedIds.map(uid => ({ demo_id: demoId, user_id: uid })));
+    }
+  }
+
+  showToast(editingDemoId ? 'Demo updated!' : 'Demo created!', 'success');
+  closeDemoModal();
+  btn.disabled = false; btn.textContent = 'Save Demo';
+  await loadDemos();
+}
+
+async function deleteDemo(id) {
+  if (!confirm('Delete this demo and all its tasks? This cannot be undone.')) return;
+  await sb.from('tasks').delete().eq('demo_id', id);
+  await sb.from('demo_assignees').delete().eq('demo_id', id);
+  await sb.from('demo_status_logs').delete().eq('demo_id', id);
+  const { error } = await sb.from('demos').delete().eq('id', id);
+  if (error) { showToast('Delete failed: ' + error.message, 'error'); return; }
+  showToast('Demo deleted.', 'info');
+  if (currentDemo?.id === id) showList();
+  await loadDemos();
+}
+</script>
+</body>
+</html>
