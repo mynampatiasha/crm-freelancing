@@ -17,101 +17,46 @@
     .pass-wrap input { padding-right:40px; }
     .pass-toggle { position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:14px;padding:0 4px; }
 
-    /* ── MOBILE TOPBAR ── */
-    .topbar {
-      display: none;
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      height: 56px;
-      background: #0D1B3E;
-      z-index: 150;
-      align-items: center;
-      padding: 0 16px;
-      gap: 12px;
-    }
-    .topbar .brand { font-size: 18px; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
-    .topbar .brand span { color: #3D8EFF; }
+    .topbar { display:none;position:fixed;top:0;left:0;right:0;height:56px;background:#0D1B3E;z-index:150;align-items:center;padding:0 16px;gap:12px; }
+    .topbar .brand { font-size:18px;font-weight:800;color:#fff;letter-spacing:-0.5px; }
+    .topbar .brand span { color:#3D8EFF; }
 
-    @media (max-width: 768px) {
-      .topbar { display: flex; }
-      .main { padding-top: 56px !important; }
-      .app-shell { display: block !important; }
-      .sidebar {
-        position: fixed !important;
-        top: 0; left: -280px;
-        width: 260px; height: 100vh;
-        z-index: 300;
-        transition: left 0.3s cubic-bezier(0.4,0,0.2,1);
-        overflow-y: auto;
-        box-shadow: 4px 0 24px rgba(0,0,0,0.3);
-      }
-      .sidebar.open { left: 0 !important; }
+    @media (max-width:768px) {
+      .topbar { display:flex; }
+      .main { padding-top:56px !important; }
+      .app-shell { display:block !important; }
+      .sidebar { position:fixed !important;top:0;left:-280px;width:260px;height:100vh;z-index:300;transition:left 0.3s cubic-bezier(0.4,0,0.2,1);overflow-y:auto;box-shadow:4px 0 24px rgba(0,0,0,0.3); }
+      .sidebar.open { left:0 !important; }
     }
 
-    /* ── HAMBURGER ── */
-    .hamburger-btn {
-      background: none; border: none; cursor: pointer;
-      padding: 6px; display: flex; flex-direction: column;
-      gap: 5px; flex-shrink: 0;
-    }
-    .hamburger-btn span {
-      display: block; width: 22px; height: 2px;
-      background: #fff; border-radius: 2px;
-      transition: all 0.3s ease;
-    }
-    .hamburger-btn.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
-    .hamburger-btn.open span:nth-child(2) { opacity: 0; }
-    .hamburger-btn.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+    .hamburger-btn { background:none;border:none;cursor:pointer;padding:6px;display:flex;flex-direction:column;gap:5px;flex-shrink:0; }
+    .hamburger-btn span { display:block;width:22px;height:2px;background:#fff;border-radius:2px;transition:all 0.3s ease; }
+    .hamburger-btn.open span:nth-child(1) { transform:translateY(7px) rotate(45deg); }
+    .hamburger-btn.open span:nth-child(2) { opacity:0; }
+    .hamburger-btn.open span:nth-child(3) { transform:translateY(-7px) rotate(-45deg); }
 
-    /* ── OVERLAY ── */
-    .sidebar-overlay {
-      display: none; position: fixed; inset: 0;
-      background: rgba(0,0,0,0.5); z-index: 200;
-      backdrop-filter: blur(2px);
-    }
-    .sidebar-overlay.active { display: block; }
+    .sidebar-overlay { display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;backdrop-filter:blur(2px); }
+    .sidebar-overlay.active { display:block; }
 
-    /* ── SIDEBAR CLOSE ── */
-    .sidebar-close {
-      display: none; position: absolute; top: 14px; right: 14px;
-      width: 30px; height: 30px; border-radius: 50%;
-      background: rgba(255,255,255,0.12); border: none;
-      color: #fff; font-size: 16px; cursor: pointer;
-      align-items: center; justify-content: center;
-      transition: background 0.2s;
-    }
-    .sidebar-close:hover { background: rgba(255,255,255,0.25); }
-    @media (max-width: 768px) { .sidebar-close { display: flex; } }
+    .sidebar-close { display:none;position:absolute;top:14px;right:14px;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,0.12);border:none;color:#fff;font-size:16px;cursor:pointer;align-items:center;justify-content:center;transition:background 0.2s; }
+    .sidebar-close:hover { background:rgba(255,255,255,0.25); }
+    @media (max-width:768px) { .sidebar-close { display:flex; } }
 
-    /* ── NAV ITEMS ── */
-    .nav-item { font-size: 15px !important; color: #ffffff !important; opacity: 0.82; transition: opacity 0.15s, background 0.15s; }
-    .nav-item:hover { opacity: 1; }
-    .nav-item.active { opacity: 1; color: #ffffff !important; }
-    .nav-label { font-size: 11px !important; color: rgba(255,255,255,0.4) !important; letter-spacing: 0.1em; }
+    .nav-item { font-size:15px !important;color:#ffffff !important;opacity:0.82;transition:opacity 0.15s,background 0.15s; }
+    .nav-item:hover { opacity:1; }
+    .nav-item.active { opacity:1;color:#ffffff !important; }
+    .nav-label { font-size:11px !important;color:rgba(255,255,255,0.4) !important;letter-spacing:0.1em; }
 
-    /* ── SIDEBAR FOOTER ── */
-    .sidebar-footer { padding: 14px 16px 18px; border-top: 1px solid rgba(255,255,255,0.1); }
-    .user-info { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-    .user-avatar {
-      width: 38px; height: 38px; border-radius: 50%;
-      background: linear-gradient(135deg, #3D8EFF, #1D4ED8);
-      color: #fff; font-weight: 700; font-size: 14px;
-      display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0; box-shadow: 0 0 0 2px rgba(255,255,255,0.2);
-    }
-    .user-name { font-size: 13.5px; font-weight: 600; color: #ffffff; line-height: 1.2; }
-    .user-email { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 1px; }
-    .btn-logout {
-      width: 100%; display: flex; align-items: center; justify-content: center;
-      gap: 8px; padding: 9px 14px; border-radius: 8px;
-      border: 1px solid rgba(255,255,255,0.15);
-      background: rgba(255,255,255,0.07);
-      color: rgba(255,255,255,0.75);
-      font-family: var(--font, 'Outfit', sans-serif);
-      font-size: 13px; font-weight: 500; cursor: pointer;
-      transition: background 0.2s, color 0.2s, border-color 0.2s;
-    }
-    .btn-logout:hover { background: rgba(239,68,68,0.18); border-color: rgba(239,68,68,0.4); color: #FCA5A5; }
+    .sidebar-footer { padding:14px 16px 18px;border-top:1px solid rgba(255,255,255,0.1); }
+    .user-info { display:flex;align-items:center;gap:10px;margin-bottom:12px; }
+    .user-avatar { width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#3D8EFF,#1D4ED8);color:#fff;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 0 0 2px rgba(255,255,255,0.2); }
+    .user-name { font-size:13.5px;font-weight:600;color:#ffffff;line-height:1.2; }
+    .user-email { font-size:11px;color:rgba(255,255,255,0.5);margin-top:1px; }
+    .btn-logout { width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:9px 14px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.75);font-family:var(--font,'Outfit',sans-serif);font-size:13px;font-weight:500;cursor:pointer;transition:background 0.2s,color 0.2s,border-color 0.2s; }
+    .btn-logout:hover { background:rgba(239,68,68,0.18);border-color:rgba(239,68,68,0.4);color:#FCA5A5; }
+
+    /* Phone badge */
+    .phone-badge { display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--text-muted); }
   </style>
 </head>
 <body>
@@ -123,16 +68,16 @@
     <button class="sidebar-close" onclick="closeSidebar()">✕</button>
     <div class="sidebar-brand">
       <div class="brand-name">CRM<span>Freelancing</span></div>
-      <div class="brand-sub">Fleet Management</div>
+      <div class="brand-sub">Your agency, fully in control</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-label">Main</div>
       <a href="dashboard.html" class="nav-item" data-page="dashboard.html" onclick="closeSidebar()"><span class="nav-icon">⬛</span> Dashboard</a>
       <a href="leads.html" class="nav-item" data-page="leads.html" onclick="closeSidebar()"><span class="nav-icon">🎯</span> Leads</a>
+      <a href="clients.html" class="nav-item" data-page="clients.html" onclick="closeSidebar()"><span class="nav-icon">🏢</span> Clients</a>
       <a href="demos.html" class="nav-item" data-page="demos.html" onclick="closeSidebar()"><span class="nav-icon">🎬</span> Demos</a>
-      <a href="clients.html"   class="nav-item" data-page="clients.html" onclick="closeSidebar()"><span class="nav-icon">🏢</span> Clients</a>
-      <a href="projects.html"  class="nav-item" data-page="projects.html" onclick="closeSidebar()"><span class="nav-icon">📁</span> Projects</a>
-      <a href="payments.html"  class="nav-item" data-page="payments.html" onclick="closeSidebar()"><span class="nav-icon">💰</span> Payments</a>
+      <a href="projects.html" class="nav-item" data-page="projects.html" onclick="closeSidebar()"><span class="nav-icon">📁</span> Projects</a>
+      <a href="payments.html" class="nav-item" data-page="payments.html" onclick="closeSidebar()"><span class="nav-icon">💰</span> Payments</a>
       <div class="nav-label">Settings</div>
       <a href="users.html" class="nav-item active" data-page="users.html" onclick="closeSidebar()"><span class="nav-icon">👥</span> Users</a>
     </nav>
@@ -166,7 +111,8 @@
     </div>
 
     <div class="page-content" style="padding-bottom:0">
-      <div class="stats-grid" style="margin-bottom:20px">        <div class="stat-card">
+      <div class="stats-grid" style="margin-bottom:20px">
+        <div class="stat-card">
           <div class="glow" style="background:#3D8EFF"></div>
           <div class="stat-label">Total Users</div>
           <div class="stat-value c-navy" id="stat-users">—</div>
@@ -189,10 +135,10 @@
       <div class="table-wrap" style="margin-bottom:0">
         <table>
           <thead>
-            <tr><th>Name</th><th>Email</th><th>Role</th><th>Access</th><th>Joined</th><th>Actions</th></tr>
+            <tr><th>Name</th><th>Email</th><th>Phone</th><th>Role</th><th>Access</th><th>Joined</th><th>Actions</th></tr>
           </thead>
           <tbody id="users-tbody">
-            <tr><td colspan="6"><div class="empty"><div class="empty-icon">👥</div><p>Loading users…</p></div></td></tr>
+            <tr><td colspan="7"><div class="empty"><div class="empty-icon">👥</div><p>Loading users…</p></div></td></tr>
           </tbody>
         </table>
       </div>
@@ -216,6 +162,11 @@
         <div class="field span2">
           <label>Email Address *</label>
           <input type="email" id="f-email" placeholder="ravi@company.com" />
+        </div>
+        <div class="field span2">
+          <label>Phone Number <span style="font-weight:400;color:var(--text-muted)">(for WhatsApp notifications)</span></label>
+          <input type="tel" id="f-phone" placeholder="e.g. 919876543210 (with country code, no +)" />
+          <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Enter with country code — e.g. 91 for India: <strong>919876543210</strong></div>
         </div>
         <div class="field span2">
           <label>Password *</label>
@@ -257,6 +208,11 @@
         <div class="field span2">
           <label>Full Name *</label>
           <input type="text" id="ef-name" placeholder="Full name" />
+        </div>
+        <div class="field span2">
+          <label>Phone Number <span style="font-weight:400;color:var(--text-muted)">(for WhatsApp notifications)</span></label>
+          <input type="tel" id="ef-phone" placeholder="e.g. 919876543210 (with country code, no +)" />
+          <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Enter with country code — e.g. 91 for India: <strong>919876543210</strong></div>
         </div>
         <div class="field span2">
           <label>Role</label>
@@ -331,7 +287,7 @@ async function loadUsers() {
   const { data, error } = await sb.from('users').select('*').order('created_at', { ascending: false });
   const tbody = document.getElementById('users-tbody');
   if (error) {
-    tbody.innerHTML = `<tr><td colspan="6"><div class="empty"><div class="empty-icon">⚠️</div><p>${error.message}</p></div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty"><div class="empty-icon">⚠️</div><p>${error.message}</p></div></td></tr>`;
     return;
   }
   allUsers = data || [];
@@ -343,7 +299,7 @@ async function loadUsers() {
 function renderUsers(list) {
   const tbody = document.getElementById('users-tbody');
   if (!list.length) {
-    tbody.innerHTML = `<tr><td colspan="6"><div class="empty"><div class="empty-icon">👥</div><p>No users yet. Click <strong>+ Add User</strong>.</p></div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty"><div class="empty-icon">👥</div><p>No users yet. Click <strong>+ Add User</strong>.</p></div></td></tr>`;
     return;
   }
   const colors = ['av-navy','av-green','av-amber','av-pink'];
@@ -352,11 +308,16 @@ function renderUsers(list) {
     return `<tr>
       <td><div class="td-user"><div class="user-row-avatar avatar ${colors[i%colors.length]}">${ini}</div><strong>${u.name||'—'}</strong></div></td>
       <td style="color:var(--text-muted)">${u.email||'—'}</td>
+      <td>
+        ${u.phone
+          ? `<span class="phone-badge">📱 ${u.phone}</span>`
+          : `<span style="color:var(--text-muted);font-size:12px">—</span>`}
+      </td>
       <td><span class="role-badge role-${u.role||'member'}">${u.role||'member'}</span></td>
       <td><span style="background:#DCFCE7;color:#16A34A;padding:3px 10px;border-radius:20px;font-size:11.5px;font-weight:600">Full Access</span></td>
       <td style="color:var(--text-muted);font-size:12px">${u.created_at?new Date(u.created_at).toLocaleDateString('en-IN'):'—'}</td>
       <td>
-        <div style="display:flex;gap:5px">
+        <div style="display:flex;gap:5px;flex-wrap:wrap">
           <button class="btn btn-ghost btn-xs" onclick="viewUser('${u.id}')">View</button>
           <button class="btn btn-warning btn-xs" onclick="openEditModal('${u.id}')">Edit</button>
           <button class="btn btn-danger btn-xs" onclick="deleteUser('${u.id}')">Remove</button>
@@ -378,7 +339,8 @@ function openAddModal() {
   document.getElementById('f-name').value  = '';
   document.getElementById('f-email').value = '';
   document.getElementById('f-pass').value  = '';
-  document.getElementById('f-role').value  = 'member';
+  document.getElementById('f-phone').value = '';
+  document.getElementById('f-role').value  = 'admin';
   document.getElementById('add-modal').classList.add('open');
 }
 function closeAddModal() { document.getElementById('add-modal').classList.remove('open'); }
@@ -393,6 +355,7 @@ async function submitAddUser() {
   const email = document.getElementById('f-email').value.trim();
   const pass  = document.getElementById('f-pass').value;
   const role  = document.getElementById('f-role').value;
+  const phone = document.getElementById('f-phone').value.trim() || null;
 
   if (!name)  { showToast('Name is required.', 'error'); return; }
   if (!email) { showToast('Email is required.', 'error'); return; }
@@ -410,7 +373,7 @@ async function submitAddUser() {
 
   if (authErr) {
     if (authErr.message.toLowerCase().includes('rate limit') || authErr.message.toLowerCase().includes('email')) {
-      showToast('Auth rate limit — user saved to roster. Disable email confirmation in Supabase Auth settings.', 'info');
+      showToast('Auth rate limit — user saved to roster.', 'info');
     } else {
       showToast('Auth error: ' + authErr.message, 'error');
       btn.disabled = false; btn.textContent = 'Create User'; return;
@@ -419,7 +382,7 @@ async function submitAddUser() {
     authId = authData?.user?.id || null;
   }
 
-  const { error: dbErr } = await sb.from('users').insert([{ name, email, role, auth_id: authId }]);
+  const { error: dbErr } = await sb.from('users').insert([{ name, email, role, phone, auth_id: authId }]);
   if (dbErr) {
     showToast('DB error: ' + dbErr.message, 'error');
     btn.disabled = false; btn.textContent = 'Create User'; return;
@@ -437,9 +400,10 @@ function openEditModal(id) {
   const u = allUsers.find(x => x.id === id);
   if (!u) return;
   editingUID = id;
-  document.getElementById('ef-name').value = u.name || '';
-  document.getElementById('ef-role').value = u.role || 'admin';
-  document.getElementById('ef-pass').value = '';
+  document.getElementById('ef-name').value  = u.name  || '';
+  document.getElementById('ef-role').value  = u.role  || 'admin';
+  document.getElementById('ef-phone').value = u.phone || '';
+  document.getElementById('ef-pass').value  = '';
   document.getElementById('edit-modal').classList.add('open');
 }
 function closeEditModal() { document.getElementById('edit-modal').classList.remove('open'); editingUID = null; }
@@ -448,51 +412,40 @@ async function submitEditUser() {
   const name    = document.getElementById('ef-name').value.trim();
   const role    = document.getElementById('ef-role').value;
   const newPass = document.getElementById('ef-pass').value.trim();
+  const phone   = document.getElementById('ef-phone').value.trim() || null;
   if (!name) { showToast('Name is required.', 'error'); return; }
 
   const btn = document.getElementById('edit-submit-btn');
   btn.disabled = true; btn.textContent = 'Updating…';
 
-  // 1. Update name + role in users table
-  const { error } = await sb.from('users').update({ name, role }).eq('id', editingUID);
+  const { error } = await sb.from('users').update({ name, role, phone }).eq('id', editingUID);
   if (error) {
     showToast('Error: ' + error.message, 'error');
     btn.disabled = false; btn.textContent = 'Update User'; return;
   }
 
-  // 2. Update password via Edge Function (only if filled in)
   if (newPass.length > 0) {
     if (newPass.length < 6) {
       showToast('Password must be at least 6 characters.', 'error');
       btn.disabled = false; btn.textContent = 'Update User'; return;
     }
-
     const targetUser = allUsers.find(x => x.id === editingUID);
     if (!targetUser?.auth_id) {
-      showToast('Name updated. Cannot change password — no auth_id found for this user.', 'info');
-      closeEditModal();
-      btn.disabled = false; btn.textContent = 'Update User';
+      showToast('Name/phone updated. Cannot change password — no auth_id found.', 'info');
+      closeEditModal(); btn.disabled = false; btn.textContent = 'Update User';
       await loadUsers(); return;
     }
-
     const res = await fetch(
       'https://bwvqyldgewxoeyxqooyw.supabase.co/functions/v1/update-user-password',
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ target_auth_id: targetUser.auth_id, new_password: newPass })
-      }
+      { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ target_auth_id: targetUser.auth_id, new_password: newPass }) }
     );
     const result = await res.json();
-
     if (!res.ok || result.error) {
-      showToast('Name updated but password change failed: ' + (result.error || 'Unknown error'), 'error');
-      closeEditModal();
-      btn.disabled = false; btn.textContent = 'Update User';
+      showToast('Updated but password change failed: ' + (result.error || 'Unknown error'), 'error');
+      closeEditModal(); btn.disabled = false; btn.textContent = 'Update User';
       await loadUsers(); return;
     }
-
-    showToast('Name and password updated!', 'success');
+    showToast('Name, phone and password updated!', 'success');
   } else {
     showToast('User updated!', 'success');
   }
@@ -510,6 +463,14 @@ function viewUser(id) {
   document.getElementById('view-user-body').innerHTML = `
     <div class="detail-row"><span class="detail-key">Name</span><span class="detail-val"><strong>${u.name||'—'}</strong></span></div>
     <div class="detail-row"><span class="detail-key">Email</span><span class="detail-val">${u.email||'—'}</span></div>
+    <div class="detail-row"><span class="detail-key">Phone</span><span class="detail-val">
+      ${u.phone
+        ? `<span style="display:inline-flex;align-items:center;gap:8px">
+             <span>📱 ${u.phone}</span>
+             <a href="https://wa.me/${u.phone}" target="_blank" style="display:inline-flex;align-items:center;gap:4px;background:#25D366;color:#fff;border-radius:6px;padding:3px 10px;font-size:11.5px;font-weight:600;text-decoration:none">💬 WhatsApp</a>
+           </span>`
+        : '<span style="color:var(--text-muted)">Not saved</span>'}
+    </span></div>
     <div class="detail-row"><span class="detail-key">Role</span><span class="detail-val"><span class="role-badge role-${u.role||'member'}">${u.role||'member'}</span></span></div>
     <div class="detail-row"><span class="detail-key">Access</span><span class="detail-val"><span style="background:#DCFCE7;color:#16A34A;padding:3px 10px;border-radius:20px;font-size:11.5px;font-weight:600">Full Access — All Modules</span></span></div>
     <div class="detail-row"><span class="detail-key">Joined</span><span class="detail-val" style="color:var(--text-muted)">${u.created_at?new Date(u.created_at).toLocaleString('en-IN'):'—'}</span></div>
