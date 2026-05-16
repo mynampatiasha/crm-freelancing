@@ -418,14 +418,12 @@
           </select>
         </div>
         <div class="field">
-          <label>Rating (1–5)</label>
-          <div class="star-input">
-            <input type="radio" name="lead-rating" id="ls5" value="5"><label for="ls5">★</label>
-            <input type="radio" name="lead-rating" id="ls4" value="4"><label for="ls4">★</label>
-            <input type="radio" name="lead-rating" id="ls3" value="3"><label for="ls3">★</label>
-            <input type="radio" name="lead-rating" id="ls2" value="2"><label for="ls2">★</label>
-            <input type="radio" name="lead-rating" id="ls1" value="1"><label for="ls1">★</label>
-          </div>
+          <label>Rating Score (e.g. 4.6)</label>
+          <input type="number" id="lf-rating-score" placeholder="4.6" min="0" max="5" step="0.1" />
+        </div>
+        <div class="field">
+          <label>Review Count (e.g. 133)</label>
+          <input type="number" id="lf-rating-count" placeholder="133" min="0" step="1" />
         </div>
 
         <!-- ── SCHEDULED / FOLLOWUP DATETIME FIELD ── -->
@@ -481,8 +479,8 @@
     </div>
     <div class="modal-body">
       <div class="alert alert-info" style="margin-bottom:16px;background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;padding:12px 14px;font-size:13px;color:#1D4ED8">
-        📋 CSV columns: <strong>company_name, phone, business_type, address, project_type, profile_link, rating, notes, status, created_by</strong><br>
-        <span style="font-size:11px;color:#3B82F6;margin-top:4px;display:block">Missing status defaults to "called". Missing rating defaults to 0.</span>
+        📋 CSV columns: <strong>company_name, phone, business_type, address, project_type, profile_link, rating_score, rating_count, notes, status, created_by</strong><br>
+        <span style="font-size:11px;color:#3B82F6;margin-top:4px;display:block">Missing status defaults to "called". rating_score e.g. 4.6, rating_count e.g. 133.</span>
       </div>
       <div class="dropzone" id="dropzone"
         ondragover="event.preventDefault();this.classList.add('drag-over')"
@@ -662,7 +660,9 @@ function renderTable(list) {
   }
   tbody.innerHTML = list.map(l => {
     const ini   = (l.company_name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
-    const stars = '★'.repeat(l.rating||0)+'☆'.repeat(5-(l.rating||0));
+    const ratingDisplay = l.rating_score
+      ? `<span style="color:#F59E0B;font-weight:700">⭐ ${Number(l.rating_score).toFixed(1)}</span>${l.rating_count ? `<span style="color:var(--text-muted);font-size:12px"> (${l.rating_count})</span>` : ''}`
+      : '—';
     const cfg   = STATUS_CONFIG[l.status] || STATUS_CONFIG.called;
     const dt    = new Date(l.created_at);
     const dtStr = dt.toLocaleDateString('en-IN') + ' ' + dt.toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit'});
@@ -680,7 +680,7 @@ function renderTable(list) {
       <td><div class="td-lead"><div class="lead-avatar">${ini}</div><strong>${l.company_name}</strong></div></td>
       <td style="color:var(--text-muted)">${l.phone||'—'}</td>
       <td>${l.business_type?`<span class="chip">${l.business_type}</span>`:'—'}</td>
-      <td><span class="stars">${stars}</span></td>
+      <td>${ratingDisplay}</td>
       <td>
         <select class="quick-status status-pill ${cfg.cls}" onchange="quickStatusChange('${l.id}', this.value, this)">
           ${Object.entries(STATUS_CONFIG).map(([k,c]) =>
@@ -871,7 +871,8 @@ async function convertLeadToClient(lead) {
     business_type: lead.business_type || null,
     project_type:  lead.project_type  || null,
     profile_link:  lead.profile_link  || null,
-    rating:        lead.rating  || null,
+    rating_score:  lead.rating_score  || null,
+    rating_count:  lead.rating_count  || null,
     notes:         lead.notes   || null,
   };
   const { error } = await sb.from('clients').insert([payload]);
@@ -925,6 +926,8 @@ function openModal(id = null) {
     document.getElementById('lf-created-by').value  = currentUserName;
     document.getElementById('lf-scheduled-at').value= '';
     document.querySelectorAll('input[name="lead-rating"]').forEach(r => r.checked = false);
+    document.getElementById('lf-rating-score').value = '';
+    document.getElementById('lf-rating-count').value = '';
     document.getElementById('modal-scheduled-field').classList.remove('show');
   }
   document.getElementById('modal-overlay').classList.add('open');
@@ -960,7 +963,8 @@ function editLead(id) {
     document.getElementById('lf-scheduled-at').value = '';
   }
 
-  if (l.rating) { const r = document.getElementById('ls'+l.rating); if(r) r.checked = true; }
+  if (l.rating_score) document.getElementById('lf-rating-score').value = l.rating_score;
+  if (l.rating_count) document.getElementById('lf-rating-count').value = l.rating_count;
   toggleScheduledField();
 }
 
@@ -974,7 +978,8 @@ async function submitLead() {
   const btn = document.getElementById('lead-submit-btn');
   btn.disabled = true; btn.textContent = 'Saving…';
 
-  const ratingEl  = document.querySelector('input[name="lead-rating"]:checked');
+  const ratingScore = parseFloat(document.getElementById('lf-rating-score').value) || null;
+  const ratingCount = parseInt(document.getElementById('lf-rating-count').value) || null;
   const newStatus = document.getElementById('lf-status').value;
   const schVal    = document.getElementById('lf-scheduled-at').value;
   const scheduledAt = (DATETIME_STATUSES.includes(newStatus) && schVal) ? new Date(schVal).toISOString() : null;
@@ -986,7 +991,8 @@ async function submitLead() {
     business_type: document.getElementById('lf-type').value                || null,
     project_type:  document.getElementById('lf-project-type').value.trim() || null,
     profile_link:  document.getElementById('lf-profile').value.trim()      || null,
-    rating:        ratingEl ? parseInt(ratingEl.value) : null,
+    rating_score:  ratingScore,
+    rating_count:  ratingCount,
     notes:         document.getElementById('lf-notes').value.trim()        || null,
     status:        newStatus,
     scheduled_at:  scheduledAt,
@@ -1036,7 +1042,9 @@ async function viewLead(id) {
   const l = allLeads.find(x => x.id === id);
   if (!l) return;
   const cfg   = STATUS_CONFIG[l.status] || STATUS_CONFIG.called;
-  const stars = '★'.repeat(l.rating||0)+'☆'.repeat(5-(l.rating||0));
+  const ratingHtml = l.rating_score
+    ? `<span style="color:#F59E0B;font-weight:700;font-size:15px">⭐ ${Number(l.rating_score).toFixed(1)}</span> <span style="color:var(--text-muted);font-size:13px">(${l.rating_count||0} reviews)</span>`
+    : '—';
   const dt    = new Date(l.created_at);
 
   // Scheduled/followup datetime display
@@ -1062,7 +1070,7 @@ async function viewLead(id) {
     <div class="detail-row"><span class="detail-key">Business Type</span><span class="detail-val">${l.business_type?`<span class="chip">${l.business_type}</span>`:'—'}</span></div>
     <div class="detail-row"><span class="detail-key">Project Type</span><span class="detail-val">${l.project_type||'—'}</span></div>
     <div class="detail-row"><span class="detail-key">Profile Link</span><span class="detail-val">${l.profile_link?`<a href="${l.profile_link}" target="_blank" style="color:var(--navy-accent)">${l.profile_link}</a>`:'—'}</span></div>
-    <div class="detail-row"><span class="detail-key">Rating</span><span class="detail-val"><span class="stars">${stars}</span></span></div>
+    <div class="detail-row"><span class="detail-key">Rating</span><span class="detail-val">${ratingHtml}</span></div>
     <div class="detail-row"><span class="detail-key">Status</span><span class="detail-val"><span class="status-pill ${cfg.cls}">${cfg.icon} ${cfg.label}</span></span></div>
     ${scheduledRow}
     <div class="detail-row"><span class="detail-key">Notes</span><span class="detail-val" style="color:var(--text-muted)">${l.notes||'—'}</span></div>
@@ -1166,7 +1174,7 @@ async function deleteLead(id) {
 function exportLeads() {
   const list = filteredLeads.length ? filteredLeads : allLeads;
   if (!list.length) { showToast('No leads to export.', 'info'); return; }
-  const headers = ['company_name','phone','business_type','address','project_type','profile_link','rating','notes','status','scheduled_at','created_by','created_at'];
+  const headers = ['company_name','phone','business_type','address','project_type','profile_link','rating_score','rating_count','notes','status','scheduled_at','created_by','created_at'];
   const rows = list.map(l => headers.map(h => {
     const v = l[h] || '';
     return `"${String(v).replace(/"/g,'""')}"`;
@@ -1234,7 +1242,8 @@ function parseCSV(file) {
         address:       row.address       || null,
         project_type:  row.project_type  || null,
         profile_link:  row.profile_link  || null,
-        rating:        parseInt(row.rating) || null,
+        rating_score:  parseFloat(row.rating_score) || null,
+        rating_count:  parseInt(row.rating_count)   || null,
         notes:         row.notes         || null,
         status:        VALID_STATUSES.includes(row.status) ? row.status : 'called',
         created_by:    row.created_by    || currentUserName,
@@ -1307,8 +1316,8 @@ async function confirmImport() {
 }
 
 function downloadTemplate() {
-  const headers = 'company_name,phone,business_type,address,project_type,profile_link,rating,notes,status,created_by';
-  const sample  = '"Sunrise Logistics","+91 9876543210","Logistics","MG Road Bangalore","Fleet Management","https://sunrise.com","4","Good potential lead","called","Rahul Sharma"';
+  const headers = 'company_name,phone,business_type,address,project_type,profile_link,rating_score,rating_count,notes,status,created_by';
+  const sample  = '"Sunrise Logistics","+91 9876543210","Logistics","MG Road Bangalore","Fleet Management","https://sunrise.com","4.6","133","Good potential lead","called","Rahul Sharma"';
   const csv     = headers + '\n' + sample;
   const blob    = new Blob([csv], { type:'text/csv' });
   const a       = document.createElement('a');

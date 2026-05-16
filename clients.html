@@ -173,7 +173,9 @@
         </select>
         <select id="filter-rating" onchange="filterClients()">
           <option value="">All Ratings</option>
-          <option value="5">★★★★★ 5</option><option value="4">★★★★ 4+</option><option value="3">★★★ 3+</option>
+          <option value="4">4.0+ ⭐</option>
+          <option value="3">3.0+ ⭐</option>
+          <option value="2">2.0+ ⭐</option>
         </select>
       </div>
 
@@ -233,14 +235,12 @@
             <input type="url" id="f-profile" placeholder="https://…" />
           </div>
           <div class="field">
-            <label>Rating (1–5)</label>
-            <div class="star-input">
-              <input type="radio" name="rating" id="s5" value="5"><label for="s5">★</label>
-              <input type="radio" name="rating" id="s4" value="4"><label for="s4">★</label>
-              <input type="radio" name="rating" id="s3" value="3"><label for="s3">★</label>
-              <input type="radio" name="rating" id="s2" value="2"><label for="s2">★</label>
-              <input type="radio" name="rating" id="s1" value="1"><label for="s1">★</label>
-            </div>
+            <label>Rating Score (e.g. 4.6)</label>
+            <input type="number" id="f-rating-score" placeholder="4.6" min="0" max="5" step="0.1" />
+          </div>
+          <div class="field">
+            <label>Review Count (e.g. 133)</label>
+            <input type="number" id="f-rating-count" placeholder="133" min="0" step="1" />
           </div>
           <div class="field span2">
             <label>Notes</label>
@@ -324,12 +324,14 @@ function renderClients(list) {
   }
   tbody.innerHTML = list.map(c => {
     const ini = (c.company_name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
-    const stars = '★'.repeat(c.rating||0)+'☆'.repeat(5-(c.rating||0));
+    const ratingDisplay = c.rating_score
+      ? `<span style="color:#F59E0B;font-weight:700">⭐ ${Number(c.rating_score).toFixed(1)}</span>${c.rating_count ? `<span style="color:var(--text-muted);font-size:12px"> (${c.rating_count})</span>` : ''}`
+      : '—';
     return `<tr>
       <td><div class="td-company"><div class="client-avatar">${ini}</div><strong>${c.company_name}</strong></div></td>
       <td style="color:var(--text-muted)">${c.phone||'—'}</td>
       <td>${c.business_type?`<span class="chip">${c.business_type}</span>`:'—'}</td>
-      <td><span class="stars" title="${c.rating||0} stars">${stars}</span></td>
+      <td>${ratingDisplay}</td>
       <td>${c.budget?'₹'+Number(c.budget).toLocaleString('en-IN'):'—'}</td>
       <td style="color:var(--text-muted)">${c.project_type||'—'}</td>
       <td style="color:var(--text-muted);font-size:12px">${new Date(c.created_at).toLocaleDateString('en-IN')}</td>
@@ -347,11 +349,11 @@ function renderClients(list) {
 function filterClients() {
   const q = document.getElementById('search-input').value.toLowerCase();
   const t = document.getElementById('filter-type').value;
-  const r = parseInt(document.getElementById('filter-rating').value) || 0;
+  const r = parseFloat(document.getElementById('filter-rating').value) || 0;
   renderClients(allClients.filter(c =>
     (!q || (c.company_name||'').toLowerCase().includes(q) || (c.business_type||'').toLowerCase().includes(q)) &&
     (!t || c.business_type === t) &&
-    (!r || (c.rating||0) >= r)
+    (!r || (c.rating_score||0) >= r)
   ));
 }
 
@@ -361,7 +363,8 @@ function openModal(id = null) {
   document.getElementById('submit-btn').textContent  = id ? 'Update Client' : 'Save Client';
   if (!id) {
     document.getElementById('client-form').reset();
-    document.querySelectorAll('input[name="rating"]').forEach(r => r.checked = false);
+    document.getElementById('f-rating-score').value = '';
+    document.getElementById('f-rating-count').value = '';
   }
   document.getElementById('modal-overlay').classList.add('open');
 }
@@ -379,7 +382,8 @@ function editClient(id) {
   document.getElementById('f-budget').value       = c.budget || '';
   document.getElementById('f-profile').value      = c.profile_link || '';
   document.getElementById('f-notes').value        = c.notes || '';
-  if (c.rating) { const r = document.getElementById('s' + c.rating); if (r) r.checked = true; }
+  document.getElementById('f-rating-score').value = c.rating_score || '';
+  document.getElementById('f-rating-count').value = c.rating_count || '';
 }
 
 async function submitClient(e) {
@@ -387,7 +391,8 @@ async function submitClient(e) {
   const btn = document.getElementById('submit-btn');
   btn.disabled = true; btn.textContent = 'Saving…';
 
-  const ratingEl = document.querySelector('input[name="rating"]:checked');
+  const ratingScore = parseFloat(document.getElementById('f-rating-score').value) || null;
+  const ratingCount = parseInt(document.getElementById('f-rating-count').value) || null;
   let docUrl = null;
   const file = document.getElementById('f-doc').files[0];
 
@@ -415,7 +420,8 @@ async function submitClient(e) {
     project_type:  document.getElementById('f-project-type').value.trim() || null,
     budget:        parseFloat(document.getElementById('f-budget').value) || null,
     profile_link:  document.getElementById('f-profile').value.trim() || null,
-    rating:        ratingEl ? parseInt(ratingEl.value) : null,
+    rating_score:  ratingScore,
+    rating_count:  ratingCount,
     notes:         document.getElementById('f-notes').value.trim() || null,
   };
   payload.document_url = docUrl || (editingId ? allClients.find(x=>x.id===editingId)?.document_url || null : null);
@@ -441,7 +447,9 @@ function viewClient(id) {
   if (!c) return;
   viewingClient = c;
   document.getElementById('view-title').textContent = c.company_name;
-  const stars = '★'.repeat(c.rating||0)+'☆'.repeat(5-(c.rating||0));
+  const ratingHtml = c.rating_score
+    ? `<span style="color:#F59E0B;font-weight:700;font-size:15px">⭐ ${Number(c.rating_score).toFixed(1)}</span> <span style="color:var(--text-muted);font-size:13px">(${c.rating_count || 0} reviews)</span>`
+    : '—';
 
   let docHtml;
   if (c.document_url) {
@@ -463,7 +471,7 @@ function viewClient(id) {
     <div class="detail-row"><span class="detail-key">Business Type</span><span class="detail-val">${c.business_type?`<span class="chip">${c.business_type}</span>`:'—'}</span></div>
     <div class="detail-row"><span class="detail-key">Project Type</span><span class="detail-val">${c.project_type||'—'}</span></div>
     <div class="detail-row"><span class="detail-key">Budget</span><span class="detail-val">${c.budget?'₹'+Number(c.budget).toLocaleString('en-IN'):'—'}</span></div>
-    <div class="detail-row"><span class="detail-key">Rating</span><span class="detail-val"><span class="stars">${stars}</span></span></div>
+    <div class="detail-row"><span class="detail-key">Rating</span><span class="detail-val">${ratingHtml}</span></div>
     <div class="detail-row"><span class="detail-key">Profile Link</span><span class="detail-val">${c.profile_link?`<a href="${c.profile_link}" target="_blank" style="color:var(--navy-accent)">${c.profile_link}</a>`:'—'}</span></div>
     <div class="detail-row"><span class="detail-key">Notes</span><span class="detail-val" style="color:var(--text-muted)">${c.notes||'—'}</span></div>
     <div class="detail-row"><span class="detail-key">Document</span><span class="detail-val">${docHtml}</span></div>
@@ -550,9 +558,8 @@ function downloadClientPDF() {
   doc.setTextColor(13, 27, 62);
   doc.setFontSize(18); doc.setFont('helvetica', 'bold');
   doc.text(c.company_name || '—', 14, 42);
-  const stars = '★'.repeat(c.rating||0) + '☆'.repeat(5-(c.rating||0));
   doc.setFontSize(12); doc.setTextColor(245, 158, 11);
-  doc.text(stars, 14, 50);
+  doc.text(c.rating_score ? `Rating: ${Number(c.rating_score).toFixed(1)} (${c.rating_count||0} reviews)` : 'Rating: —', 14, 50);
   doc.setTextColor(0, 0, 0);
   const rows = [
     ['Phone', c.phone || '—'],
@@ -560,6 +567,7 @@ function downloadClientPDF() {
     ['Business Type', c.business_type || '—'],
     ['Project Type', c.project_type || '—'],
     ['Budget', c.budget ? 'Rs.' + Number(c.budget).toLocaleString('en-IN') : '—'],
+    ['Rating', c.rating_score ? `${Number(c.rating_score).toFixed(1)} (${c.rating_count||0} reviews)` : '—'],
     ['Profile Link', c.profile_link || '—'],
     ['Notes', c.notes || '—'],
     ['Document', c.document_url ? c.document_url : 'Not uploaded'],
