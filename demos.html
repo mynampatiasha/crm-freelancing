@@ -25,10 +25,11 @@
     .filter-row input { flex:1;min-width:160px; }
 
     /* ASSIGNEES */
-    .assignee-chips { display:flex;flex-wrap:wrap;gap:5px;margin-top:6px; }
-    .assignee-chip { display:inline-flex;align-items:center;gap:5px;background:#EFF6FF;color:#1D4ED8;border-radius:20px;padding:3px 10px;font-size:12px;font-weight:600; }
-    .assignee-chip .rm { cursor:pointer;color:#94A3B8;font-size:13px;line-height:1; }
-    .assignee-chip .rm:hover { color:#EF4444; }
+    .assignee-chips { display:flex;flex-wrap:wrap;gap:8px;margin-top:6px; }
+    .assignee-row { display:inline-flex;align-items:center;gap:6px;background:#EFF6FF;border-radius:20px;padding:4px 4px 4px 12px; }
+    .assignee-name { font-size:12px;font-weight:600;color:#1D4ED8; }
+    .wa-btn { display:inline-flex;align-items:center;gap:3px;background:#25D366;color:#fff;border:none;border-radius:14px;padding:3px 9px;font-size:11px;font-weight:700;cursor:pointer;text-decoration:none;font-family:var(--font);transition:background 0.15s; }
+    .wa-btn:hover { background:#1ebe5d; }
 
     /* DEMO LINK FIELD */
     .demo-link-field { display:none;margin-top:10px; }
@@ -113,6 +114,15 @@
     .user-checkbox-list { display:flex;flex-direction:column;gap:8px;max-height:180px;overflow-y:auto;border:1.5px solid var(--card-border);border-radius:var(--r);padding:10px 12px; }
     .user-checkbox-item { display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer; }
     .user-checkbox-item input { width:15px;height:15px;accent-color:var(--navy-accent);cursor:pointer; }
+
+    /* VIEW DEMO MODAL */
+    .view-modal-section { margin-bottom:18px; }
+    .view-modal-section-title { font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--card-border); }
+    .view-assignee-row { display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid #F1F5F9; }
+    .view-assignee-row:last-child { border-bottom:none; }
+    .view-task-item { display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid #F1F5F9;font-size:13px; }
+    .view-task-item:last-child { border-bottom:none; }
+    .view-task-done { text-decoration:line-through;color:var(--text-muted); }
   </style>
 </head>
 <body>
@@ -218,7 +228,7 @@
           </div>
         </div>
 
-        <!-- Convert to Project Banner (shown only when approved) -->
+        <!-- Convert to Project Banner -->
         <div id="convert-banner" class="convert-banner" style="display:none">
           <div class="convert-banner-text">
             <strong>🎉 Demo Approved!</strong>
@@ -249,7 +259,7 @@
           </div>
         </div>
 
-        <!-- Assignees Card -->
+        <!-- Assignees Card with WhatsApp buttons -->
         <div class="card" style="margin-bottom:18px">
           <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px">Assigned Team Members</div>
           <div id="detail-assignees" class="assignee-chips"></div>
@@ -382,6 +392,21 @@
   </div>
 </div>
 
+<!-- VIEW DEMO MODAL -->
+<div class="modal-overlay" id="view-demo-modal" onclick="if(event.target===this)closeViewDemoModal()">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-header">
+      <h2 id="vd-title">Demo Details</h2>
+      <button class="modal-close" onclick="closeViewDemoModal()">✕</button>
+    </div>
+    <div class="modal-body" id="vd-body"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeViewDemoModal()">Close</button>
+      <button class="btn btn-primary btn-sm" id="vd-open-btn">Open Full Detail →</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase.js"></script>
@@ -440,7 +465,7 @@ function closeSidebar() {
 /* ── LOAD DATA ── */
 async function loadDemos() {
   const { data, error } = await sb.from('demos')
-    .select('*, leads(company_name), demo_assignees(user_id, users(name))')
+    .select('*, leads(company_name), demo_assignees(user_id, users(name, phone))')
     .order('created_at', { ascending: false });
   const tbody = document.getElementById('demos-tbody');
   if (error) {
@@ -452,7 +477,7 @@ async function loadDemos() {
 }
 
 async function loadUsers() {
-  const { data } = await sb.from('users').select('id, name').order('name');
+  const { data } = await sb.from('users').select('id, name, phone').order('name');
   allUsers = data || [];
   const sel = document.getElementById('new-task-user');
   sel.innerHTML = '<option value="">Assign to…</option>' + allUsers.map(u => `<option value="${u.id}">${u.name}</option>`).join('');
@@ -513,7 +538,8 @@ function renderDemos(list) {
         </div>
       </td>
       <td onclick="event.stopPropagation()">
-        <div style="display:flex;gap:5px">
+        <div style="display:flex;gap:5px;flex-wrap:wrap">
+          <button class="btn btn-ghost btn-xs" onclick="viewDemoModal('${d.id}')">View</button>
           <button class="btn btn-warning btn-xs" onclick="editDemoById('${d.id}')">Edit</button>
           <button class="btn btn-danger btn-xs" onclick="deleteDemo('${d.id}')">Delete</button>
         </div>
@@ -531,12 +557,74 @@ function filterDemos() {
   ));
 }
 
-/* ── OPEN DETAIL ── */
+/* ── VIEW DEMO MODAL (quick view from list) ── */
+async function viewDemoModal(id) {
+  const { data, error } = await sb.from('demos')
+    .select('*, leads(company_name), demo_assignees(user_id, users(name, phone))')
+    .eq('id', id).single();
+  if (error || !data) { showToast('Could not load demo.', 'error'); return; }
+
+  const d = data;
+  const assignees = d.demo_assignees || [];
+  const pct = d.progress || 0;
+  const deadline = d.deadline
+    ? new Date(d.deadline).toLocaleString('en-IN', {dateStyle:'medium', timeStyle:'short'})
+    : '—';
+
+  document.getElementById('vd-title').textContent = d.title;
+  document.getElementById('vd-body').innerHTML = `
+    <div class="view-modal-section">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
+        <span class="badge ${STATUS_BADGE[d.status] || 'badge-gray'}">${d.status}</span>
+        ${d.leads?.company_name ? `<span style="font-size:13px;color:var(--text-muted)">🎯 ${d.leads.company_name}</span>` : ''}
+        ${d.deadline ? `<span style="font-size:13px;color:var(--text-muted)">⏰ ${deadline}</span>` : ''}
+      </div>
+      ${d.description ? `<p style="font-size:13px;color:var(--text-muted);margin-bottom:12px">${d.description}</p>` : ''}
+      <div style="margin-bottom:6px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);margin-bottom:4px">
+          <span>Progress</span><span style="font-weight:700;color:var(--navy-accent)">${pct}%</span>
+        </div>
+        <div class="progress-bar" style="height:7px">
+          <div class="progress-fill ${pct===100?'green':pct>=50?'amber':''}" style="width:${pct}%"></div>
+        </div>
+      </div>
+    </div>
+
+    ${d.demo_link ? `
+    <div class="view-modal-section">
+      <div class="view-modal-section-title">Demo Link</div>
+      <a href="${d.demo_link}" target="_blank" style="color:var(--navy-accent);font-size:13px;font-weight:600;word-break:break-all">🔗 ${d.demo_link}</a>
+    </div>` : ''}
+
+    <div class="view-modal-section">
+      <div class="view-modal-section-title">Assigned Team Members</div>
+      ${assignees.length ? assignees.map(a => {
+        const name  = a.users?.name  || '—';
+        const phone = a.users?.phone || null;
+        const msg   = encodeURIComponent(`Hi ${name}, a demo titled "${d.title}" has been assigned to you. Please check the CRM for details and tasks. Thanks!`);
+        return `<div class="view-assignee-row">
+          <span style="font-size:13px;font-weight:600">👤 ${name}</span>
+          ${phone
+            ? `<a class="wa-btn" href="https://wa.me/${phone}?text=${msg}" target="_blank">💬 WhatsApp</a>`
+            : `<span style="font-size:11px;color:var(--text-muted)">No phone saved</span>`}
+        </div>`;
+      }).join('') : '<p style="font-size:13px;color:var(--text-muted)">No one assigned.</p>'}
+    </div>
+  `;
+
+  document.getElementById('vd-open-btn').onclick = () => { closeViewDemoModal(); openDemo(id); };
+  document.getElementById('view-demo-modal').classList.add('open');
+}
+
+function closeViewDemoModal() {
+  document.getElementById('view-demo-modal').classList.remove('open');
+}
+
+/* ── OPEN FULL DETAIL ── */
 async function openDemo(id) {
   const { data, error } = await sb.from('demos')
-    .select('*, leads(id, company_name), demo_assignees(user_id, users(name))')
-    .eq('id', id)
-    .single();
+    .select('*, leads(id, company_name), demo_assignees(user_id, users(name, phone))')
+    .eq('id', id).single();
   if (error || !data) { showToast('Could not load demo.', 'error'); return; }
   currentDemo = data;
 
@@ -546,22 +634,31 @@ async function openDemo(id) {
   badge.textContent = currentDemo.status;
   badge.className   = 'badge ' + (STATUS_BADGE[currentDemo.status] || 'badge-gray');
 
-  // Deadline
   document.getElementById('detail-deadline').textContent = currentDemo.deadline
     ? '⏰ Due: ' + new Date(currentDemo.deadline).toLocaleString('en-IN', {dateStyle:'medium',timeStyle:'short'})
     : '';
 
-  // Convert banner
   document.getElementById('convert-banner').style.display = currentDemo.status === 'approved' ? 'flex' : 'none';
-
-  // Demo link
   renderDemoLink();
 
-  // Assignees
-  const assignees = (currentDemo.demo_assignees || []).map(a => a.users?.name).filter(Boolean);
-  document.getElementById('detail-assignees').innerHTML = assignees.length
-    ? assignees.map(n => `<span class="assignee-chip"><span>👤</span>${n}</span>`).join('')
-    : '<span style="color:var(--text-muted);font-size:13px">No one assigned yet</span>';
+  // Assignees with WhatsApp buttons
+  const assignees = currentDemo.demo_assignees || [];
+  const assigneeEl = document.getElementById('detail-assignees');
+  if (!assignees.length) {
+    assigneeEl.innerHTML = '<span style="color:var(--text-muted);font-size:13px">No one assigned yet</span>';
+  } else {
+    assigneeEl.innerHTML = assignees.map(a => {
+      const name  = a.users?.name  || '—';
+      const phone = a.users?.phone || null;
+      const msg   = encodeURIComponent(`Hi ${name}, a demo titled "${currentDemo.title}" has been assigned to you. Deadline: ${currentDemo.deadline ? new Date(currentDemo.deadline).toLocaleDateString('en-IN') : 'N/A'}. Please check the CRM for tasks and details. Thanks!`);
+      return `<div class="assignee-row">
+        <span class="assignee-name">👤 ${name}</span>
+        ${phone
+          ? `<a class="wa-btn" href="https://wa.me/${phone}?text=${msg}" target="_blank">💬 WhatsApp</a>`
+          : `<span style="font-size:11px;color:#94A3B8;padding:0 6px">No phone</span>`}
+      </div>`;
+    }).join('');
+  }
 
   document.getElementById('list-view').style.display   = 'none';
   document.getElementById('detail-view').style.display = 'block';
@@ -677,8 +774,7 @@ function closeStatusModal() {
 
 function onStatusModalChange() {
   const val = document.getElementById('sm-status').value;
-  const linkWrap = document.getElementById('sm-link-wrap');
-  linkWrap.classList.toggle('show', val === 'sent for review');
+  document.getElementById('sm-link-wrap').classList.toggle('show', val === 'sent for review');
 }
 
 async function saveStatusChange() {
@@ -698,7 +794,6 @@ async function saveStatusChange() {
   const { error } = await sb.from('demos').update(updatePayload).eq('id', currentDemo.id);
   if (error) { showToast('Error: ' + error.message, 'error'); return; }
 
-  // Log to history
   await sb.from('demo_status_logs').insert([{
     demo_id:     currentDemo.id,
     from_status: fromStatus,
@@ -707,17 +802,15 @@ async function saveStatusChange() {
     changed_by:  currentUserName,
   }]);
 
-  currentDemo.status    = newStatus;
+  currentDemo.status = newStatus;
   if (link) currentDemo.demo_link = link;
 
-  // Update UI
   const badge = document.getElementById('detail-badge');
   badge.textContent = newStatus;
   badge.className   = 'badge ' + (STATUS_BADGE[newStatus] || 'badge-gray');
   document.getElementById('convert-banner').style.display = newStatus === 'approved' ? 'flex' : 'none';
   renderDemoLink();
 
-  // Update list
   const d = allDemos.find(x => x.id === currentDemo.id);
   if (d) { d.status = newStatus; if (link) d.demo_link = link; }
 
@@ -739,9 +832,9 @@ async function loadTimeline() {
     return;
   }
   el.innerHTML = logs.map(log => {
-    const emoji = STATUS_EMOJI[log.to_status] || '🔵';
+    const emoji    = STATUS_EMOJI[log.to_status] || '🔵';
     const badgeCls = STATUS_BADGE[log.to_status] || 'badge-gray';
-    const dt = new Date(log.changed_at).toLocaleString('en-IN', {dateStyle:'medium',timeStyle:'short'});
+    const dt       = new Date(log.changed_at).toLocaleString('en-IN', {dateStyle:'medium',timeStyle:'short'});
     return `<div class="timeline-item">
       <div class="timeline-dot" style="background:#EFF6FF">${emoji}</div>
       <div class="timeline-content">
@@ -778,26 +871,21 @@ async function saveEditedLink() {
 
 /* ── CONVERT TO PROJECT ── */
 async function convertToProject() {
-  if (!confirm('Convert this demo into a project? This will create a new project linked to the lead\'s client.')) return;
+  if (!confirm('Convert this demo into a project?')) return;
   const leadId = currentDemo.lead_id;
   if (!leadId) { showToast('This demo has no linked lead.', 'error'); return; }
-
-  // Get client_id from lead
   const { data: lead } = await sb.from('leads').select('client_id, company_name').eq('id', leadId).single();
   if (!lead?.client_id) { showToast('Lead has no linked client. Convert the lead to a client first.', 'error'); return; }
-
   const { error } = await sb.from('projects').insert([{
-    title:        currentDemo.title + ' (from Demo)',
-    client_id:    lead.client_id,
-    status:       'not started',
-    description:  currentDemo.description || null,
-    progress:     0,
+    title:       currentDemo.title + ' (from Demo)',
+    client_id:   lead.client_id,
+    status:      'not started',
+    description: currentDemo.description || null,
+    progress:    0,
   }]);
   if (error) { showToast('Error creating project: ' + error.message, 'error'); return; }
-
-  // Mark demo as converted
   await sb.from('demos').update({ status: 'approved' }).eq('id', currentDemo.id);
-  showToast('Project created successfully! Go to Projects to view it.', 'success');
+  showToast('Project created! Go to Projects to view it.', 'success');
 }
 
 /* ── ADD / EDIT DEMO MODAL ── */
@@ -805,12 +893,12 @@ async function openAddDemo() {
   editingDemoId = null;
   document.getElementById('demo-modal-title').textContent = 'Add New Demo';
   document.getElementById('demo-submit-btn').textContent  = 'Save Demo';
-  document.getElementById('df-title').value   = '';
-  document.getElementById('df-desc').value    = '';
-  document.getElementById('df-link').value    = '';
+  document.getElementById('df-title').value    = '';
+  document.getElementById('df-desc').value     = '';
+  document.getElementById('df-link').value     = '';
   document.getElementById('df-deadline').value = '';
-  document.getElementById('df-status').value  = 'draft';
-  document.getElementById('df-lead').value    = '';
+  document.getElementById('df-status').value   = 'draft';
+  document.getElementById('df-lead').value     = '';
   renderAssigneeCheckboxes([]);
   document.getElementById('demo-modal').classList.add('open');
 }
@@ -866,7 +954,6 @@ async function submitDemo() {
 
   if (error) { showToast('Error: ' + error.message, 'error'); btn.disabled = false; btn.textContent = editingDemoId ? 'Update Demo' : 'Save Demo'; return; }
 
-  // Save assignees
   if (demoId) {
     await sb.from('demo_assignees').delete().eq('demo_id', demoId);
     const selectedIds = getSelectedAssignees();
